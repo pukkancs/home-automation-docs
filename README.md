@@ -20,4 +20,6 @@ This repository is meant to be a **single source of truth** that evolves alongsi
 
 - [`docs/current-state.md`](docs/current-state.md): **Current state** of the home automation system (what is actually deployed today).
 - [`docs/future-plan.md`](docs/future-plan.md): **Future plans and roadmap** for how we want the system to evolve.
+- [`docs/heating-master-plan.md`](docs/heating-master-plan.md): **Heating & climate master plan** for the PukkancsLak smart climate system (detailed technical design).
+- [`docs/networking-master-plan.md`](docs/networking-master-plan.md): **Networking master plan** for the UniFi-based backbone, VLANs, WiFi/Thread configuration, and core services.
 
