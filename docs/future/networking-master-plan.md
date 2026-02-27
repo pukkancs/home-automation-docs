@@ -186,5 +186,28 @@ The **Heating & Climate Master Plan** ([`heating-master-plan.md`](heating-master
 
 For **access control** (gates, doors, Gate Hubs, cameras) see [access-control-plan.md](access-control-plan.md).
 
+---
+
+## 9. Product References
+
+Official product pages and documentation:
+
+| Product | Store / manufacturer |
+| :--- | :--- |
+| UDM SE | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
+| UniFi Aggregation Switch (SFP) | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
+| USW Pro Max 48 PoE | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
+| USW XG 10 PoE | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
+| USW Ultra 60W | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
+| UNVR | [store.ui.com](https://store.ui.com/us/en/category/consoles-nvrs) |
+| U7 Pro XG | [store.ui.com](https://store.ui.com/us/en/category/all-access-points) |
+| U7 Outdoor | [store.ui.com](https://store.ui.com/us/en/category/all-access-points) |
+| UniFi Swiss Army Knife | [store.ui.com](https://store.ui.com/) — verify model name |
+| UniFi UPS 2U | [store.ui.com](https://store.ui.com/us/en/category/all-power) |
+| Tech specs (all UniFi) | [techspecs.ui.com](https://techspecs.ui.com/) |
+| Aqara Hub M3 | [aqara.com](https://us.aqara.com/products/aqara-smart-hub-m3) |
+
+---
+
 *This document is intended to evolve alongside [`heating-master-plan.md`](heating-master-plan.md) and other subsystem plans (lighting, sensors, alarms). Update both when changes affect cross‑cutting concerns like VLANs, RF planning, or core services.*
 

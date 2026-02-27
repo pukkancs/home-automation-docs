@@ -982,5 +982,27 @@ DISPLAYS                [UniFi Connect 21"] — Living Room (Command Tower)
 
 ---
 
+## 18. Product References
+
+Official product pages and documentation:
+
+| Product | Store / manufacturer |
+| :--- | :--- |
+| Viessmann Vitodens 222-F | [viessmann.co.uk](https://viessmann.co.uk/en/products/gas/vitodens-222-f.html) |
+| Viessmann OpenTherm Extension Module | Via Viessmann dealer (order with boiler) |
+| Olimex ESP32-POE-ISO | [olimex.com](https://www.olimex.com/Products/IoT/ESP32/ESP32-POE-ISO/open-source-hardware) |
+| DIYLESS OpenTherm Master Shield | [diyless.pl](https://diyless.pl/) |
+| Aqara Hub M3 | [aqara.com](https://us.aqara.com/products/aqara-smart-hub-m3) |
+| Aqara W500 UFH Thermostat | [aqara.com](https://www.aqara.com/) |
+| Aqara W600 Radiator TRV | [aqara.com](https://www.aqara.com/) |
+| Aqara W100 Display Sensor | [aqara.com](https://www.aqara.com/) |
+| Aqara Temperature Sensor T1 | [aqara.com](https://www.aqara.com/) |
+| Aqara M200 Hub | [aqara.com](https://www.aqara.com/) |
+| Shelly Plus 1 | [shelly.com](https://www.shelly.com/en-gb/products/product-overview/shelly-plus-1) |
+| Shelly Wall Display XL | [shelly.com](https://www.shelly.com/en/products/shop/shelly-wall-display) |
+| midea-local (HA integration) | [HACS / GitHub](https://github.com/nickn4/midea-local) |
+
+---
+
 *Document version: 2026-02-26. Review after each open item is resolved. Next scheduled review: post heat loss calculation and manifold survey.*
 
