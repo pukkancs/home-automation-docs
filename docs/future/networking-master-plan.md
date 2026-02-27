@@ -43,7 +43,7 @@ All core devices below (except USW Ultra 60W) are in a **rack cabinet in the Gar
 | **U7 Pro XG** | Living Room | **New CAT6a** to USW XG 10 PoE (or Pro Max 48 as designed) |
 | **U7 Pro XG** | Guest House | **New CAT6a** to USW XG 10 PoE (or Pro Max 48 as designed) |
 | **U7 Outdoor** | Rear garden | Repositioned to improve coverage in outbuilding (Sonos) |
-| **UniFi Swiss Army Knife** | Front of house | New deployment; covers front outdoor area and gate access |
+| **UK-ULTRA** | Front of house | New deployment; covers front outdoor area and gate access |
 
 **New cabling required:** 2× CAT6a to engine room (for USW Ultra 60W); 2× CAT6a for Living Room and Guest House U7 Pro XG APs. U7 Outdoor in rear garden will be repositioned to improve coverage in the outbuilding (Sonos speakers).
 
@@ -65,7 +65,7 @@ See also the architecture diagram in [`heating-master-plan.md`](heating-master-p
                 │              ├── [CAT6a] U7 Pro XG (Living Room)
                 │              ├── [CAT6a] U7 Pro XG (Guest House)
                 │              └── [PoE]   U7 Outdoor (Rear garden, repositioned)
-                ├── [PoE] UniFi Swiss Army Knife (Front of house)
+                ├── [PoE] UK-ULTRA (Front of house)
                 ├── [10G SFP+] UNVR (Protect)
                 └── [10G SFP+] Unraid Server (MariaDB, 100TB)
 ```
@@ -181,7 +181,7 @@ The **Heating & Climate Master Plan** ([`heating-master-plan.md`](heating-master
 
 - Confirm final VLAN IDs and subnets in UniFi and ensure they match this document.
 - Validate Thread channel and 2.4 GHz WiFi configuration to minimise interference.
-- Confirm where Home Assistant runs long‑term (Pi 5 vs Unraid) and lock down that design.
+- **Resolved:** Home Assistant runs on **Raspberry Pi 5** (IoT VLAN). Unraid is for data backup, heavy visualization (Grafana), and other server workloads.
 - Define which external endpoints (if any) IoT devices are allowed to reach for firmware and time.
 
 For **access control** (gates, doors, Gate Hubs, cameras) see [access-control-plan.md](access-control-plan.md).
@@ -202,7 +202,7 @@ Official product pages and documentation:
 | UNVR | [store.ui.com](https://store.ui.com/us/en/category/consoles-nvrs) |
 | U7 Pro XG | [store.ui.com](https://store.ui.com/us/en/category/all-access-points) |
 | U7 Outdoor | [store.ui.com](https://store.ui.com/us/en/category/all-access-points) |
-| UniFi Swiss Army Knife | [store.ui.com](https://store.ui.com/) — verify model name |
+| UK-ULTRA | [store.ui.com](https://store.ui.com/us/en/products/uk-ultra) |
 | UniFi UPS 2U | [store.ui.com](https://store.ui.com/us/en/category/all-power) |
 | Tech specs (all UniFi) | [techspecs.ui.com](https://techspecs.ui.com/) |
 | Aqara Hub M3 | [aqara.com](https://us.aqara.com/products/aqara-smart-hub-m3) |
