@@ -1005,16 +1005,16 @@ Official product pages and documentation:
 | Viessmann Vitodens 222-F | [viessmann.co.uk](https://viessmann.co.uk/en/products/gas/vitodens-222-f.html) |
 | Viessmann OpenTherm Extension Module | Via Viessmann dealer (order with boiler) |
 | Olimex ESP32-POE-ISO | [olimex.com](https://www.olimex.com/Products/IoT/ESP32/ESP32-POE-ISO/open-source-hardware) |
-| DIYLESS OpenTherm Master Shield | [diyless.pl](https://diyless.pl/) |
+| DIYLESS OpenTherm Master Shield | [diyless.com](https://diyless.com/product/master-opentherm-shield) |
 | Aqara Hub M3 | [aqara.com](https://us.aqara.com/products/aqara-smart-hub-m3) |
-| Aqara W500 UFH Thermostat | [aqara.com](https://www.aqara.com/) |
-| Aqara W600 Radiator TRV | [aqara.com](https://www.aqara.com/) |
-| Aqara W100 Display Sensor | [aqara.com](https://www.aqara.com/) |
-| Aqara Temperature Sensor T1 | [aqara.com](https://www.aqara.com/) |
-| Aqara M200 Hub | [aqara.com](https://www.aqara.com/) |
+| Aqara W500 UFH Thermostat | [aqara.com](https://www.aqara.com/en/product/floor-heating-thermostat-w500/) |
+| Aqara W600 Radiator TRV | [aqara.com](https://www.aqara.com/en/product/radiator-thermostat-w600/) |
+| Aqara W100 Display Sensor | [aqara.com](https://www.aqara.com/eu/product/climate-sensor-w100/) |
+| Aqara Temperature Sensor T1 | [aqara.com](https://www.aqara.com/en/product/temperature-and-humidity-sensor-t1) |
+| Aqara M200 Hub | [aqara.com](https://www.aqara.com/us/product/hub-m200/) |
 | Shelly Plus 1 | [shelly.com](https://www.shelly.com/en-gb/products/product-overview/shelly-plus-1) |
-| Shelly Wall Display XL | [shelly.com](https://www.shelly.com/en/products/shop/shelly-wall-display) |
-| midea-local (HA integration) | [HACS / GitHub](https://github.com/nickn4/midea-local) |
+| Shelly Wall Display XL | [shelly.com](https://www.shelly.com/products/shelly-wall-display-xl-black) |
+| midea-local (HA integration) | [GitHub](https://github.com/nickn4/midea-local) |
 
 ---
 

@@ -108,5 +108,5 @@ Official product pages and documentation:
 | G6 Turret | [store.ui.com](https://store.ui.com/us/en/products/uvc-g6-turret) | [techspecs.ui.com](https://techspecs.ui.com/unifi/cameras-nvrs/uvc-g6-turret) |
 | G5 Turret Ultra | [store.ui.com](https://store.ui.com/us/en/pro/category/cameras-dome-turret/products/uvc-g5-turret-ultra) | [techspecs.ui.com](https://techspecs.ui.com/unifi/cameras-nvrs/uvc-g5-turret-ultra) |
 | G6 Entry | [store.ui.com](https://store.ui.com/us/en/products/uvc-g6-entry) | [techspecs.ui.com](https://techspecs.ui.com/unifi/door-access/uvc-g6-entry) |
-| UA-G3 Reader | [store.ui.com](https://store.ui.com/us/en/category/door-access-readers/collections/access-reader/products/ua-g3) | [techspecs.ui.com](https://techspecs.ui.com/unifi/door-access/ua-g3) |
+| UA-G3 Reader | [store.ui.com](https://store.ui.com/us/en/products/ua-g3) | [techspecs.ui.com](https://techspecs.ui.com/unifi/door-access/ua-g3) |
 | UACC-DoorCloser | [store.ui.com](https://store.ui.com/us/en/products/uacc-doorcloser-us) | [techspecs.ui.com](https://techspecs.ui.com/unifi/door-access/uacc-doorcloser-us) |

@@ -194,16 +194,16 @@ Official product pages and documentation:
 
 | Product | Store / manufacturer |
 | :--- | :--- |
-| UDM SE | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
-| UniFi Aggregation Switch (SFP) | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
-| USW Pro Max 48 PoE | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
-| USW XG 10 PoE | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
-| USW Ultra 60W | [store.ui.com](https://store.ui.com/us/en/category/all-routing-switching) |
-| UNVR | [store.ui.com](https://store.ui.com/us/en/category/consoles-nvrs) |
-| U7 Pro XG | [store.ui.com](https://store.ui.com/us/en/category/all-access-points) |
-| U7 Outdoor | [store.ui.com](https://store.ui.com/us/en/category/all-access-points) |
+| UDM SE | [store.ui.com](https://store.ui.com/us/en/products/udm-se) |
+| UniFi Aggregation Switch (SFP) | [store.ui.com](https://store.ui.com/us/en/products/usw-aggregation) |
+| USW Pro Max 48 PoE | [store.ui.com](https://store.ui.com/us/en/products/usw-pro-max-48-poe) |
+| USW XG 10 PoE | [store.ui.com](https://store.ui.com/us/en/products/usw-pro-xg-10-poe) |
+| USW Ultra 60W | [store.ui.com](https://store.ui.com/us/en/products/usw-ultra-60w) |
+| UNVR | [store.ui.com](https://store.ui.com/us/en/products/unvr) |
+| U7 Pro XG | [store.ui.com](https://store.ui.com/us/en/products/u7-pro-xg) |
+| U7 Outdoor | [store.ui.com](https://store.ui.com/us/en/products/u7-outdoor) |
 | UK-ULTRA | [store.ui.com](https://store.ui.com/us/en/products/uk-ultra) |
-| UniFi UPS 2U | [store.ui.com](https://store.ui.com/us/en/category/all-power) |
+| UniFi UPS 2U | [store.ui.com](https://store.ui.com/us/en/products/ups-2u-us) |
 | Tech specs (all UniFi) | [techspecs.ui.com](https://techspecs.ui.com/) |
 | Aqara Hub M3 | [aqara.com](https://us.aqara.com/products/aqara-smart-hub-m3) |
 
