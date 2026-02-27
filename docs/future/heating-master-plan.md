@@ -177,7 +177,7 @@ Home Assistant controls the boiler by setting the **flow temperature setpoint** 
 | Office | **21°C** | Occupancy-based (manual or presence) | Gree/LG unit, independent |
 | Guest House (Occupied) | **Follows main house** | Same schedules and targets as main house | Triggered via `guest_house_mode = Occupied` |
 | Guest House (Unoccupied) | **18°C constant** | No schedule; constant setback; AC inhibited | Humidity management active daily |
-| Guest House (Frost Protection) | **7°C minimum** | Absolute minimum; no AC for temp; boiler only | Humidity management active; long absences |
+| Guest House (Frost Protection) | **7°C minimum** | Boiler only; AC heating activates at critical 4°C | Humidity management active; long absences |
 
 ### 4.2 Operating Modes
 
@@ -197,8 +197,8 @@ input_select.season_mode:
 input_select.main_house_mode:
   options:
     - Normal           # All schedules and setbacks run as designed
-    - Frost Protection # All zones → 7°C minimum; all schedules suspended;
-                       # MDV inhibited; boiler fires only to prevent freezing
+    - Frost Protection # All zones → 7°C minimum; boiler only; at critical 4°C,
+                       # AC heating mode also activates as backup
 ```
 
 **Guest House Mode** — controls guest house independently:
@@ -207,7 +207,7 @@ input_select.guest_house_mode:
   options:
     - Occupied         # Follows same schedules/targets as main house
     - Unoccupied       # 18°C constant; AC inhibited; humidity management active
-    - Frost Protection # 7°C minimum; AC inhibited; humidity management active
+    - Frost Protection # 7°C minimum; boiler only; AC heating at critical 4°C; humidity active
 ```
 
 Mode transitions:
@@ -451,7 +451,7 @@ The Guest House operates on a dedicated `input_select.guest_house_mode` with thr
 | :--- | :--- | :--- | :--- | :--- |
 | **Occupied** | Follows main house schedule (21°C / setbacks) | Available, same logic as main house | Standard | Guests treated as full occupants — same comfort targets and season mode apply |
 | **Unoccupied** | 18°C constant setback | Inhibited (temperature) | Active (see below) | House is empty but maintained |
-| **Frost Protection** | 7°C minimum — pipes safe | Inhibited (temperature) | Active (see below) | Long absence in winter — absolute minimum energy use |
+| **Frost Protection** | 7°C minimum — pipes safe | Inhibited unless critical 4°C | Active (see below) | Boiler only; AC heating activates at 4°C as backup |
 
 ```
 input_select.guest_house_mode:
@@ -535,6 +535,7 @@ input_number:
   outdoor_temp_avg_24h:     # Rolling 24h average of outdoor sensor
   frost_temp_main:          # Frost protection minimum for main house (default: 7°C)
   frost_temp_guest:         # Frost protection minimum for guest house (default: 7°C)
+  frost_critical_temp:      # Critical temp below which AC heating activates (default: 4°C)
   humidity_threshold_high:  # Humidity % above which dehumidify cycle triggers (default: 70%)
   humidity_run_minutes:     # Duration of AC dehumidify cycle in minutes (default: 30)
 
@@ -576,8 +577,8 @@ Transition rules:
   Neutral → either:   Permitted when threshold met AND 48h stability guard passed
 
 Note: season_mode is independent of main_house_mode and guest_house_mode.
-  A house in Frost Protection still has a season_mode (determines whether
-  the boiler or AC would be used if frost temp is breached).
+  In Frost Protection, the boiler is always primary. If any room reaches
+  frost_critical_temp (default 4°C), AC in heating mode also activates as backup.
   When season_mode changes, set input_datetime.mdv_last_mode_change = now
   to force MDV through its 30-min grace period.
 ```
@@ -650,24 +651,30 @@ Action:
 ```
 Trigger: main_house_mode changes to "Frost Protection"
          OR (main_house_mode = Frost Protection AND any room temp < frost_temp_main)
+         OR (main_house_mode = Frost Protection AND any room temp < frost_critical_temp)
 
 Action when entering Frost Protection:
   → All W500 UFH setpoints → frost_temp_main (default 7°C)
   → All W600 TRV setpoints → frost_temp_main
-  → MDV: INHIBITED (neither heating nor cooling — frost protection via wet system only)
+  → MDV: INHIBITED for normal frost (boiler only)
   → Boiler flow temp: minimum curve value (35°C) — runs only if zone calls
   → All schedules and setbacks suspended
   → HA notification: "Main house set to Frost Protection"
+
+Action when any room < frost_critical_temp (default 4°C):
+  → MDV: enable heating mode (target 5°C) — backup to boiler
+  → Office AC: enable heating if office temp < frost_critical_temp
+  → HA notification: "Critical frost — AC heating backup activated"
+  → When all rooms > frost_critical_temp + 1°C hysteresis: revert MDV/AC to inhibited
 
 Action when leaving Frost Protection (back to Normal):
   → Restore all setpoints to scheduled values
   → Re-enable MDV and schedule logic
   → HA notification: "Main house returned to Normal mode"
 
-Note: Frost Protection does NOT override the boiler's own anti-freeze function.
-The boiler has a hardware anti-freeze cycle that fires independently at ~3°C flow temp.
-The HA frost protection layer acts earlier (7°C room temp) to prevent the boiler
-anti-freeze from ever needing to activate.
+Note: Frost Protection uses boiler as primary. AC heating only activates at
+critical temp (4°C) as a safety backup. The boiler has its own hardware
+anti-freeze at ~3°C flow temp; the HA layer acts earlier (7°C room) to avoid it.
 ```
 
 **Automation 9: Guest House Frost Protection**
@@ -675,12 +682,19 @@ anti-freeze from ever needing to activate.
 Trigger: guest_house_mode changes to "Frost Protection"
          OR (guest_house_mode = Frost Protection AND
              any guest room temp < frost_temp_guest)
+         OR (guest_house_mode = Frost Protection AND
+             any guest room temp < frost_critical_temp)
 
 Action when entering Frost Protection:
   → Guest House W500 #1 setpoint → frost_temp_guest (default 7°C)
-  → Guest House IR AC: INHIBITED for temperature control
+  → Guest House IR AC: INHIBITED for normal frost (boiler only)
   → Humidity management: ACTIVE (see Automation 11)
   → HA notification: "Guest house set to Frost Protection"
+
+Action when any guest room < frost_critical_temp (default 4°C):
+  → IR AC for affected room(s): enable heating mode (target 5°C)
+  → HA notification: "Critical frost — Guest House AC heating backup activated"
+  → When all guest rooms > frost_critical_temp + 1°C hysteresis: revert IR AC to inhibited
 
 Action when leaving:
   → Restore to Unoccupied mode setpoint (18°C) or Occupied if toggled
