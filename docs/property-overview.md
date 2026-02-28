@@ -88,4 +88,4 @@ FLOOR 1            ┌──────────────┬────�
 
 ---
 
-*Update this document when the property layout changes. Keep it generic; subsystem-specific details (e.g. AP placement, Sonos) stay in the relevant current/future docs.*
+*Update this document when the property layout changes. Keep it generic; subsystem-specific details (e.g. AP placement, Sonos) stay in the relevant subsystem docs.*
