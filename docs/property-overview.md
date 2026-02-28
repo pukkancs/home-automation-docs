@@ -6,21 +6,85 @@ Generic reference for the property layout. Link to this document from networking
 
 ## Building Layout
 
-The house has **5 half floors**:
+The house is a **split-level property** with **7 half floors** in a staggered layout:
 
-| Level | Areas |
-| :--- | :--- |
-| 1 | Garage, Laundry, Summer Kitchen |
-| 2 | Guest House (separate entrance): Guest Bedroom, Guest Living Room, Guest Kitchen, Guest Bathroom |
-| 3 | Kitchen, Living Room |
-| 4 | Bathroom, Play Room, Office |
-| 5 | Alex Room, Vicky Room, Master Bedroom |
+```text
+Floor layout (vertical relationship):
+
+1
+             2
+3
+             4
+5
+             6
+7
+```
+
+The split-level design places floors **next to each other** (side by side) rather than stacked; 3rd Floor is above 1st Floor, 2nd Floor is halfway shifted to the side. **Cabling:** vertical runs (e.g. 1→3) are typically easier than lateral runs (e.g. 1→2). Floors 6–7 are empty spaces, so cable runs there are straightforward.
+
+```text
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 7            High Attic
+
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 6            Low Attic
+
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 5            ┌──────────────┬──────────────┐
+                   │              │              │
+              Alex Room     Vicky Room    Master Bedroom
+
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 4            ┌──────────────┬──────────────┐
+                   │              │              │
+              Bathroom      Play Room        Office
+
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 3               Main House
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+    Living Area    Dining Area     Kitchen
+          │
+    ┌─────┴─────┐
+    │           │
+ Couch    Entertainment
+
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 2            Guest House (separate entrance)
+                         │
+    ┌────────────┬───────┴────────────────────┬────────────┐
+    │            │                            │            │
+Guest Bedroom  Guest Living Room  Guest Kitchen  Guest Bathroom
+                      │
+               ┌──────┴──────┐
+               │             │
+          Dining Area   Living Area
+                             │
+                        ┌────┴────┐
+                        │         │
+                    Couch   Entertainment
+
+─────────────────────────────────────────────────────────────────────
+
+FLOOR 1            ┌──────────────┬──────────────┐
+                   │              │              │
+               Garage        Laundry      Summer Kitchen
+
+─────────────────────────────────────────────────────────────────────
+```
 
 ## Outdoor Areas
 
 **Front outdoor area:** Main Car Gate, Garage Car Gate, Main Pedestrian Gate, Waste Storage Gate.
 
-**Back garden:** Kids Playhouse, small outbuilding (seating and grill).
+**Back garden:** Kids Playhouse, Grill House.
 
 ---
 

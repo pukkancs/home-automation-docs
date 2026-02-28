@@ -1,5 +1,7 @@
 # Home Automation Roadmap
 
+*Draft · Version 1.0*
+
 This document captures our **concrete, technical plans** for how the home automation system should evolve. It points to detailed master plans for each subsystem; there is no near/mid/long-term breakdown for now.
 
 ### Heating & climate

@@ -1,5 +1,7 @@
 # Solar & Battery Storage Plan (PukkancsLak)
 
+*Draft · Version 1.0*
+
 This document describes the planned **solar PV** and **high-voltage battery storage** for the property. It is separate from the networking and heating plans but relevant to power resilience for the rack (UniFi UPS, core equipment, PoE loads).
 
 For property layout see [property overview](../property-overview.md). For how the rack and PoE equipment are powered today see [current/networking.md](../current/networking.md#1-core-equipment).

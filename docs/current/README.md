@@ -1,5 +1,7 @@
 # Current State (PukkancsLak)
 
+*Last updated: 2026-02-26*
+
 This folder describes the **current, actually deployed** home automation setup. Each document covers one subsystem and mirrors the structure of the [future](../future/) plans.
 
 ### Documents

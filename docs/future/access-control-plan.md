@@ -1,5 +1,7 @@
 # Access Control Plan (PukkancsLak)
 
+*Draft · Version 1.0*
+
 This document describes the **target design** for access control: gates (front outdoor area, garage/waste) and doors (main house, guest house, garage door). Current state is in [current/access-control.md](../current/access-control.md). For property layout see [property overview](../property-overview.md).
 
 ---
@@ -77,7 +79,7 @@ An **UniFi Access Ultra** and a **fail-safe electric lock** will be added to the
 
 **Future:**
 
-- Add a **UniFi Door Hub Mini**. **CAT6a** required to the guest house.
+- Add a **UniFi Door Hub Mini**. **CAT6a** required — part of the direct Rack→Guest House cable bundle (see [networking master plan](networking-master-plan.md#24-cable-routing--networking-points-strategy)).
 - Same lock strategy as main house: convert the **second** lock to **knob-key storage-room-style** and add **1 fail-safe electric lock** paired with it; retain the original method for longer absences and extra security.
 - From outside, automated access via the **linked G6 Entry**.
 

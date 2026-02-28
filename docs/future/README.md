@@ -1,5 +1,7 @@
 # Future Plans (PukkancsLak)
 
+*Draft · Version 1.0*
+
 This folder holds the **target design and roadmap** for the home automation system. Each master plan is a detailed technical document; the roadmap links them and points back to current state.
 
 ### Documents

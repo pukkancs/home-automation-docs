@@ -1,5 +1,7 @@
 # Project Documentation: PukkancsLak Smart Climate System (2026)
 
+*Draft · Version 1.0*
+
 This document is the comprehensive technical design guide for the smart climate control system at PukkancsLak. It supersedes earlier drafts and incorporates all architectural decisions made through design review. The system integrates a **Viessmann Vitodens 222-F** boiler into a **UniFi 10GbE backbone**, using **Home Assistant** as the sole logic engine, with an emphasis on **local-first operation**, **OpenTherm modulation**, and **ecosystem consolidation** around the Aqara Matter/Thread/Zigbee stack.
 
 For the underlying **network and infrastructure design** this system depends on, see [`networking-master-plan.md`](networking-master-plan.md). For property layout (floors, room names) see [property overview](../property-overview.md).

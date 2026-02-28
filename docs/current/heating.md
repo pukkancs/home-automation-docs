@@ -1,5 +1,7 @@
 # Current Heating & Cooling (PukkancsLak)
 
+*Last updated: 2026-02-26*
+
 This document describes the **current, deployed** heating and cooling setup. For the target design see the [future plan](../future/future-plan.md) and [heating master plan](../future/heating-master-plan.md). For property layout (floors, room names) see [property overview](../property-overview.md).
 
 ---

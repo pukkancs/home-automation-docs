@@ -1,5 +1,7 @@
 # Networking Master Plan (PukkancsLak, 2026)
 
+*Draft · Version 1.0*
+
 This document is the detailed technical design for the **home network and infrastructure** at PukkancsLak.  
 It defines how UniFi, VLANs, WiFi/Thread, and core services are structured to support all home automation subsystems, including heating, cooling, lighting, sensors, and alarms.
 
@@ -32,7 +34,7 @@ All core devices below (except USW Ultra 60W) are in a **rack cabinet in the Gar
   - Olimex ESP32‑POE‑ISO (OpenTherm gateway).
 - **USW XG 10 PoE** — uplink switch for high‑throughput access points (Garage rack; APs in hallway, Living Room, Guest House, front, rear).
 - **UNVR** — UniFi Protect NVR (cameras); 10G SFP+ to Aggregation (Garage rack).
-- **USW Ultra 60W** — engine room; fed by **2 new CAT6a** runs from core. Powers engine-room devices (e.g. OpenTherm gateway) and keeps cable runs short.
+- **USW Ultra 60W** — engine room; fed by **a new CAT6a** runs from core. Powers engine-room devices (e.g. OpenTherm gateway) and keeps cable runs short.
 - **Unraid Server (Ryzen 5900X, 100TB)** — runs MariaDB (HA recorder), Frigate, and storage/backup services (Garage rack).
 
 ### 2.2 Access Points and Outdoor
@@ -40,12 +42,56 @@ All core devices below (except USW Ultra 60W) are in a **rack cabinet in the Gar
 | AP / Device | Location | Uplink / Notes |
 | :--- | :--- | :--- |
 | **U7 Pro XG** | Hallway next to Garage | Existing; PoE from USW XG 10 PoE |
-| **U7 Pro XG** | Living Room | **New CAT6a** to USW XG 10 PoE (or Pro Max 48 as designed) |
-| **U7 Pro XG** | Guest House | **New CAT6a** to USW XG 10 PoE (or Pro Max 48 as designed) |
-| **U7 Outdoor** | Rear garden | Repositioned to improve coverage in outbuilding (Sonos) |
-| **UK-ULTRA** | Front of house | New deployment; covers front outdoor area and gate access |
+| **U7 Pro XG** | Living Room ceiling | **New CAT6a** (PoE) — no PoE point currently |
+| **U7 Pro XG** | Guest Living Room | **Direct run** from High Attic (PoE) — see §2.4 |
+| **UniFi Connect Display** | Wall between Dining and Kitchen | **New CAT6a** (PoE) — no PoE point currently |
+| **U7 Outdoor** | Rear garden | Reposition to improve coverage in Grill House (Sonos) |
+| **UK-ULTRA** | Front of house | New deployment; covers front outdoor area and keeps cars connected |
 
-**New cabling required:** 2× CAT6a to engine room (for USW Ultra 60W); 2× CAT6a for Living Room and Guest House U7 Pro XG APs. U7 Outdoor in rear garden will be repositioned to improve coverage in the outbuilding (Sonos speakers).
+**New cabling required:**
+- 2× CAT6a to engine room (for USW Ultra 60W).
+- 1× CAT6a (PoE) to Living Room ceiling — U7 Pro XG.
+- 2× CAT6a (1 PoE) to wall between Dining and Kitchen — UniFi Connect Display + 1 spare for USW Ultra uplink if needed.
+- 2× CAT6a to Living Room entertainment area — Shield TV, PS5, LG CX 65" OLED + 1 spare for USW Ultra uplink if needed.
+- Guest House: **direct run from Garage Rack** (1→2) — see §2.4.
+- Door access: new CAT6a runs for main house door, garage door, Guest House door (per [access-control-plan.md](access-control-plan.md)).
+
+U7 Outdoor in rear garden will be repositioned to improve coverage in the Grill House (Sonos speakers).
+
+### 2.4 Cable Routing & Networking Points Strategy
+
+**Principle:** All cables in-wall or in conduit. No visible cables after refurbishment. Run cables during refurb while walls are open. This section is part of the broader review of how networking points are planned and distributed across the property.
+
+**Floor layout (see [property overview](../property-overview.md)):** Floors 1–2 and 3–4 are side-by-side (half-level staggered design). Vertical runs (e.g. 1→3) are typically easier than lateral runs (e.g. 1→2). Floors 6–7 are empty — cable runs there are straightforward.
+
+**Cable paths:**
+
+| Path | Notes |
+| :--- | :--- |
+| **Rack (Garage) → High Attic** | 24× CAT6a existing; High Attic is main distribution |
+| **Rack (Garage) → Guest House** | **Direct run** (1→2) — no need to route via Attic; shortest path |
+| **High Attic → Office** | Feeds office wardrobe; CAT5e distribution to Office, Vicky, Alex, Playroom |
+| **High Attic → Floor 3** | Living Room AP, Connect Display, entertainment |
+| **High Attic → Floor 5** | Hallway U7 Pro XG, Playroom camera, etc. |
+| **Rack → Engine Room** | Direct (2× for USW Ultra 60W) |
+| **Rack / Attic → Door access** | Main house door, garage; Guest House door via Rack→Guest House run |
+
+Floors 6–7 are empty; Low Attic (Floor 6) may serve as pass-through for vertical runs. Cable runs in 6–7 are straightforward.
+
+**Guest House — direct run from Garage Rack:** No need to route via High Attic (1→7→2). Run **11× CAT6a directly from the Garage rack to Guest House** (1→2). Point count is determined by actual needs — PoE devices, entertainment, and connectivity:
+
+| Drop | Location | Purpose |
+| :--- | :--- | :--- |
+| 1× CAT6a (PoE) | Guest Living Room ceiling | U7 Pro XG |
+| 1× CAT6a (PoE) | Guest Living Room | Aqara M200 (IR for AC) |
+| 1× CAT6a (PoE) | Guest Bedroom | Aqara M200 (IR for AC) |
+| 1× CAT6a (PoE) | Guest House front door | Door Hub Mini (per access-control-plan) |
+| 2× CAT6a | Guest Living Room | Entertainment systems |
+| 2× CAT6a | Guest Living Room | Couch area |
+| 2× CAT6a | Guest Bedroom | Bedroom connectivity |
+| **Total** | **11× CAT6a** | All in-wall during refurb |
+
+The existing 8+2 Guest House points terminating in the office wardrobe are **not used**; they are superseded by this direct run. Path 1→2 is shorter than 1→7→2; cleaner topology, and point placement aligned with actual use.
 
 ### 2.3 High-Level Topology Diagram
 
@@ -63,7 +109,7 @@ See also the architecture diagram in [`heating-master-plan.md`](heating-master-p
                 ├── [10G SFP+] USW XG 10 PoE
                 │              ├── [PoE]   U7 Pro XG (Hallway)
                 │              ├── [CAT6a] U7 Pro XG (Living Room)
-                │              ├── [CAT6a] U7 Pro XG (Guest House)
+                │              ├── [CAT6a direct] U7 Pro XG (Guest Living Room)
                 │              └── [PoE]   U7 Outdoor (Rear garden, repositioned)
                 ├── [PoE] UK-ULTRA (Front of house)
                 ├── [10G SFP+] UNVR (Protect)

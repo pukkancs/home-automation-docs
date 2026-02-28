@@ -1,5 +1,7 @@
 # Current Access Control (PukkancsLak)
 
+*Last updated: 2026-02-26*
+
 This document describes the **current, deployed** access control (gates and doors). For the target design see the [future plan](../future/future-plan.md) and [access control plan](../future/access-control-plan.md). For property layout see [property overview](../property-overview.md).
 
 ---
