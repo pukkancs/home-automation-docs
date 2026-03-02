@@ -31,12 +31,13 @@ So there are **2 UFH zones**: Living Room and Guest House Room 2, each controlle
 ## 3. Radiators
 
 - **Radiator circuit:** The radiator zone is controlled by a **wireless Salus thermostat** located in the **Master Bedroom**. When it calls for heat, the wiring centre enables the radiator circuit and the boiler fires.
+- **Zone valve actuator:** A **Honeywell VC8010-12** 24V actuator drives the radiator circuit zone valve (2-port or 3-port). The Salus wiring centre energises the actuator when the radiator thermostat calls for heat; the valve opens and allows flow to the radiator circuit.
 - **Radiator heads:** All radiators use **manual thermostatic valve (TRV) heads**. There are no smart TRVs (e.g. Aqara W600) today; room-by-room radiator control is manual via the TRV dials.
 
 ## 4. MDV Duct System
 
 - The **MDV duct system** is installed and serves the main house (Living Room, bedrooms, Playroom, Master Bedroom as per the future design).
-- It is controlled by its **own display / wall controller** (wired or wireless — to be confirmed). It is **not** integrated with Home Assistant or the rest of the automation stack.
+- It is controlled by a **wired controller**: **KJR-12B/DP(T)** with connections A–E (A brown, B red, C yellow, D black, E white). It is **not** integrated with Home Assistant or the rest of the automation stack.
 
 **Equipment model numbers:**
 
@@ -96,28 +97,30 @@ Home Assistant (highest authority)
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Living Room | — | W500 (UFH stat) | MDV Duct AirCon | W500 (built-in) | Hybrid — UFH primary heat, MDV cooling |
 | Bathroom | 2x W600 | W500 (if loop independent, TBC) | — | W500 (built-in) | Hybrid UFH + Rad |
-| Alex (child bedroom) | 1x W600 | — | MDV Duct AirCon (shared) | W100 (display sensor) | Hybrid Rad + MDV |
-| Vicky (child bedroom) | 1x W600 | — | MDV Duct AirCon (shared) | W100 (display sensor) | Hybrid Rad + MDV |
+| Alex (child bedroom) | 1x W600 | — | MDV Duct AirCon (shared) | T1 | Hybrid Rad + MDV |
+| Vicky (child bedroom) | 1x W600 | — | MDV Duct AirCon (shared) | T1 | Hybrid Rad + MDV |
 | Playroom | 1x W600 | — | MDV Duct AirCon (shared) | W100 (display sensor) | Hybrid Rad + MDV |
-| Master Bedroom | 2x W600 | — | MDV Duct AirCon (shared) | T1 (standalone sensor) | Hybrid Rad + MDV |
-| Office | 1x W600 | — | Smart AirCon (Gree/LG) | T1 (standalone sensor) | Hybrid Rad + AirCon |
+| Master Bedroom | 2x W600 | — | MDV Duct AirCon (shared) | W100 (display sensor) | Hybrid Rad + MDV |
+| Office | 1x W600 | — | Smart AirCon (Gree/LG) | T1 | Hybrid Rad + AirCon |
 
-> **Sensor logic:** W100 display sensors are used in children's rooms and playroom where visibility of current temperature is useful. T1 standalone sensors are used in Master Bedroom and Office where a display is not needed. W500 and W600 have built-in sensors but wall sensors provide a more representative room-average reading. W600 sensors read close to the radiator and should not be used as the sole room temperature source for HA demand logic — always use the wall sensor as the primary temp source for HA automations.
+> **Sensor logic:** W100 display sensors are used in Master Bedroom and Playroom where visibility of current temperature is useful. T1 sensors are used in all other rooms. An outdoor T1 provides the weather compensation input. W500 and W600 have built-in sensors but wall sensors provide a more representative room-average reading. W600 sensors read close to the radiator and should not be used as the sole room temperature source for HA demand logic — always use the wall sensor as the primary temp source for HA automations.
 
 ### Guest House
 
 | Room | Radiators | UFH | Cooling | Wall Sensor | Zone Type |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Guest Room 1 | — | UFH (shared zone, W500 #1) | Old AirCon (IR via M200) | T1 (standalone sensor) | Hybrid UFH + IR AC |
-| Guest Room 2 | — | UFH (shared zone, W500 #1) | Old AirCon (IR via M200) | T1 (standalone sensor) | Hybrid UFH + IR AC |
+| Guest Bedroom | — | UFH (shared zone, W500 #1) | Old AirCon (IR via M200) | T1 | Hybrid UFH + IR AC |
+| Guest Living Room | — | UFH (shared zone, W500 #1) | Old AirCon (IR via M200) | T1 | Hybrid UFH + IR AC |
+| Guest Kitchen | — | UFH (shared zone, W500 #1) | — | T1 | UFH only |
+| Guest Bathroom | — | UFH (shared zone, W500 #1) | — | T1 | UFH only |
 
-> **Guest House UFH:** Both guest rooms share a single UFH zone controlled by W500 #1. Individual room temperature feedback comes from the T1 sensors — HA uses these to decide whether to trigger the IR AirCon in each room independently, even though the UFH zone covers both rooms together.
+> **Guest House UFH:** Guest Bedroom, Guest Living Room, Guest Kitchen, and Guest Bathroom share a single UFH zone controlled by W500 #1. Individual room temperature feedback comes from the T1 sensors — HA uses these for humidity management and to decide whether to trigger the IR AirCon in Guest Bedroom and Guest Living Room independently.
 
 ### UFH Zones Summary
 
 | Zone | Location | Thermostat | Wiring Centre Channel |
 | :--- | :--- | :--- | :--- |
-| Zone 1 | Guest House (both rooms) | Aqara W500 #1 | Channel 1 |
+| Zone 1 | Guest House (Bedroom, Living Room, Kitchen, Bathroom) | Aqara W500 #1 | Channel 1 |
 | Zone 2 | Living Room | Aqara W500 #2 | Channel 2 |
 | Zone 3 | Bathroom (if independent loop confirmed) | Aqara W500 #3 | Channel 3 |
 
@@ -320,10 +323,10 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 | Location | Quantity | Wall Sensor | Notes |
 | :--- | :--- | :--- | :--- |
 | Bathroom | 2x W600 | W500 (built-in) | Boost to 23°C during comfort windows |
-| Alex (bedroom) | 1x W600 | W100 | Setback schedule |
-| Vicky (bedroom) | 1x W600 | W100 | Setback schedule |
+| Alex (bedroom) | 1x W600 | T1 | Setback schedule |
+| Vicky (bedroom) | 1x W600 | T1 | Setback schedule |
 | Playroom | 1x W600 | W100 | Active 2pm–9pm schedule |
-| Master Bedroom | 2x W600 | T1 | Setback schedule; MDV also serves this room |
+| Master Bedroom | 2x W600 | W100 | Setback schedule; MDV also serves this room |
 | Office | 1x W600 | T1 | Occupancy-based schedule; Gree/LG also serves this room |
 
 **Total W600 count: 8 minimum.** Confirm during site survey — if any room has additional radiators not listed, add one W600 per head.
@@ -485,9 +488,9 @@ ELSE (no demand):
 
 ### 8.1 Hardware: Aqara M200 Hub (PoE)
 
-The old AirCon units in Guest House Room 1 and Room 2 do not have smart connectivity. They are controlled via **IR blasters** using the **Aqara M200 Hub**, which has a built-in IR transmitter.
+The old AirCon units in Guest Bedroom and Guest Living Room do not have smart connectivity. They are controlled via **IR blasters** using the **Aqara M200 Hub**, which has a built-in IR transmitter.
 
-- **2x Aqara M200 Hubs** — one per Guest House room, PoE-powered
+- **2x Aqara M200 Hubs** — one per Guest Bedroom and Guest Living Room, PoE-powered
 - Joins Aqara Zigbee/Matter ecosystem — no new ecosystem introduced
 - HA sends IR commands via the M200 to replicate remote control actions
 - Pairs with the Aqara M3 Hub
@@ -517,7 +520,7 @@ input_select.guest_house_mode:
 
 **Occupied mode detail:** When set to Occupied, the Guest House UFH zone follows the same season mode and schedule logic as the main house. The old AirCon units (IR via M200) are available for heating and cooling on the same demand thresholds. The Guest House is treated as a full zone of the property.
 
-**Toggle locations:** Shelly Wall Display in Guest Room 2, UniFi Connect panel, HA Companion App.
+**Toggle locations:** Shelly Wall Display in Guest Living Room, UniFi Connect panel, HA Companion App.
 
 ---
 
@@ -545,22 +548,24 @@ One sensor per room for room temperature feedback to HA. These drive the demand 
 | :--- | :--- | :--- | :--- |
 | Living Room | W500 #2 (built-in) | W500 built-in | UFH demand + MDV interlock logic |
 | Bathroom | W500 #3 (built-in, if loop independent) | W500 built-in | UFH + rad boost logic |
-| Alex (bedroom) | W100 (display sensor) | W100 | Rad demand + MDV demand; display useful for kids |
-| Vicky (bedroom) | W100 (display sensor) | W100 | Rad demand + MDV demand; display useful for kids |
+| Alex (bedroom) | T1 | T1 | Rad demand + MDV demand |
+| Vicky (bedroom) | T1 | T1 | Rad demand + MDV demand |
 | Playroom | W100 (display sensor) | W100 | Rad demand + MDV demand; display for quick check |
-| Master Bedroom | T1 (standalone) | T1 | Rad demand + MDV demand; W600 built-in NOT used as primary |
-| Office | T1 (standalone) | T1 | Rad + Gree/LG demand; discreet, no display needed |
-| Guest House Room 1 | T1 (standalone) | T1 | UFH indirect feedback + IR AC trigger |
-| Guest House Room 2 | T1 (standalone) | T1 | UFH indirect feedback + IR AC trigger |
+| Master Bedroom | W100 (display sensor) | W100 | Rad demand + MDV demand; display useful |
+| Office | T1 | T1 | Rad + Gree/LG demand |
+| Guest Bedroom | T1 | T1 | UFH feedback + IR AC trigger |
+| Guest Living Room | T1 | T1 | UFH feedback + IR AC trigger |
+| Guest Kitchen | T1 | T1 | UFH feedback |
+| Guest Bathroom | T1 | T1 | UFH feedback |
 | Outdoor | T1 (outdoor rated) | T1 outdoor | Weather compensation heating curve input |
 
 > **Critical:** W600 TRV built-in sensors must never be used as the primary room temperature source in HA automations. They read near the radiator and will be several degrees higher than actual room temperature when the rad is firing. Always use the dedicated wall sensor (W100 or T1) as `sensor.room_temperature` in all automations and climate entities.
 
-> **Humidity:** The Aqara T1, W100, and W500 all report **temperature and humidity**. No additional humidity sensors are needed. The Guest House T1 sensors in Room 1 and Room 2 provide the humidity readings used by the Unoccupied and Frost Protection humidity management automations (Automation 11). Ensure HA exposes `sensor.guest_room_1_humidity` and `sensor.guest_room_2_humidity` from the T1 devices.
+> **Humidity:** The Aqara T1, W100, and W500 all report **temperature and humidity**. No additional humidity sensors are needed. The Guest House T1 sensors (Guest Bedroom, Guest Living Room) provide the humidity readings used by the Unoccupied and Frost Protection humidity management automations (Automation 11). Ensure HA exposes the humidity entities from these T1 devices.
 
 ### 10.2 W100 Display Sensor
 
-The **Aqara W100** combines a temperature/humidity sensor with a small e-ink display. Use in rooms where visibility of current temp is useful but a full thermostat is not needed (Playroom, Alex, Vicky). Stays in the Aqara ecosystem.
+The **Aqara W100** combines a temperature/humidity sensor with a small e-ink display. Use in **Master Bedroom** and **Playroom** where visibility of current temp is useful. Other rooms use T1 sensors. Stays in the Aqara ecosystem.
 
 ---
 
@@ -598,8 +603,8 @@ input_number:
 
 input_datetime:
   mdv_last_mode_change:       # Timestamp of last MDV heat↔cool mode transition
-  guest_ac_r1_last_dehumid:   # Last dehumidify run timestamp — Guest Room 1
-  guest_ac_r2_last_dehumid:   # Last dehumidify run timestamp — Guest Room 2
+  guest_ac_bedroom_last_dehumid:  # Last dehumidify run timestamp — Guest Bedroom
+  guest_ac_living_last_dehumid:   # Last dehumidify run timestamp — Guest Living Room
 
 input_text:
   mdv_last_mode:         # Tracks last active MDV mode: HEAT / COOL / FAN / OFF
@@ -786,11 +791,11 @@ Condition check per room:
     → Send IR command: AC ON, mode = DRY (dehumidify), fan = AUTO
     → Wait humidity_run_minutes (default 30 min)
     → Send IR command: AC OFF
-    → Record timestamp to guest_ac_rX_last_dehumid
+    → Record timestamp to guest_ac_bedroom_last_dehumid or guest_ac_living_last_dehumid
 
   ELIF room_humidity > 80% (emergency threshold — override season restriction):
     → Run dehumidify cycle regardless of season_mode
-    → HA notification: "High humidity alert — Guest Room X dehumidifying"
+    → HA notification: "High humidity alert — Guest Bedroom / Guest Living Room dehumidifying"
 
 Rationale:
   Empty rooms in cold/damp climates accumulate humidity rapidly — mould risk
@@ -883,10 +888,10 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 | Layer | Device | Location | Role |
 | :--- | :--- | :--- | :--- |
 | 1 (Primary) | UniFi Connect 21" | Living Room | "Command Tower" — full system overview, scene control, guest-friendly |
-| 2 (Tactical) | Shelly Wall Display XL (10.1") | Couch area, Upstairs, Guest Room 2 | Home Assistant mode — fast local control without opening an app |
+| 2 (Tactical) | Shelly Wall Display XL (10.1") | Couch area, Upstairs, Guest Living Room | Home Assistant mode — fast local control without opening an app |
 | 3 (Room) | Aqara W500 | Living Room, Guest House, Bathroom | Room thermostat — physical rotary setpoint adjustment |
 | 3 (Room) | Aqara W600 | Each radiator | TRV — manual temperature adjustment at the rad |
-| 3 (Room) | Aqara W100 | Playroom, Alex, Vicky | Display + sensor — see temp, no control needed |
+| 3 (Room) | Aqara W100 | Master Bedroom, Playroom | Display + sensor — see temp, no control needed |
 | 4 (Remote) | HA Companion App | Mobile | Full remote access when away from home |
 
 ---
@@ -908,14 +913,14 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 | :--- | :--- | :--- |
 | Aqara W500 UFH Thermostat | 2 (or 3 if bathroom loop confirmed independent) | x-kom.pl, Allegro, Media Expert |
 | Aqara W600 Radiator TRV | 8 minimum (survey required — 1 per rad head) | x-kom.pl, Allegro |
-| Aqara W100 Display Sensor | 3 (Alex, Vicky, Playroom) | x-kom.pl, Allegro |
+| Aqara W100 Display Sensor | 2 (Master Bedroom, Playroom) | x-kom.pl, Allegro |
 
 ### Sensors
 
 | Item | Qty | Rooms | Supplier (Poland) |
 | :--- | :--- | :--- | :--- |
-| Aqara Temperature Sensor T1 (indoor) | 4 | Master Bedroom, Office, Guest Room 1, Guest Room 2 | x-kom.pl, Allegro, Media Expert |
-| Aqara Temperature Sensor T1 (outdoor rated) | 1 | Outdoor (weather compensation) | x-kom.pl, Allegro |
+| Aqara Temperature Sensor T1 (indoor) | 7 | Alex, Vicky, Office, Guest Bedroom, Guest Living Room, Guest Kitchen, Guest Bathroom | x-kom.pl, Allegro, Media Expert |
+| Aqara Temperature Sensor T1 (outdoor rated) | 1 | Outdoor — weather compensation heating curve input | x-kom.pl, Allegro |
 
 ### Switching & Control
 
@@ -1021,16 +1026,16 @@ ROOMS / ENDPOINTS       [Aqara M3 Hub] (Thread/Zigbee/Matter)
           ┌──────────────────┼──────────────────┬──────────────────┐
           │                  │                  │                  │
     [W600 TRVs]        [W500 UFH stats]   [W100 sensors]    [T1 sensors]
-    Bath x2             Living Room        Alex (bedroom)    Master Bedroom
-    Alex x1             Guest House        Vicky (bedroom)   Office
-    Vicky x1            Bathroom (TBC)     Playroom          Guest Room 1
-    Playroom x1                                              Guest Room 2
+    Bath x2             Living Room        Master Bedroom    Alex, Vicky, Office
+    Alex x1             Guest House        Playroom          Guest Bedroom, Guest Living Room
+    Vicky x1            Bathroom (TBC)                        Guest Kitchen, Guest Bathroom
+    Playroom x1                                              Outdoor (weather comp)
     Master x2                                               Outdoor (weather)
     Office x1
 
                         [Aqara M200 PoE x2]  (Guest House)
                              │ IR
-                        [Old AirCon R1]  [Old AirCon R2]
+                        [Old AirCon Guest Bedroom]  [Old AirCon Guest Living Room]
 
 ─────────────────────────────────────────────────────────────────────
 
@@ -1046,7 +1051,7 @@ AIRCON (WiFi/LAN)       [MDV Duct System + WF-60A1 WiFi Module]
 ─────────────────────────────────────────────────────────────────────
 
 DISPLAYS                [UniFi Connect 21"] — Living Room (Command Tower)
-                        [Shelly Wall XL x3] — Couch / Upstairs / Guest Room 2
+                        [Shelly Wall XL x3] — Couch / Upstairs / Guest Living Room
                              (Home Assistant mode, local control)
                         [HA Companion App]  — Mobile (remote access)
 ```
