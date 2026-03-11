@@ -10,7 +10,7 @@ Technical documentation for the home automation system. The subsystem documents 
 - [**networking.md**](networking.md) — Network topology, UniFi equipment, cabling, VLANs, WiFi/Thread.
 - [**heating.md**](heating.md) — Heating, cooling, and climate (boiler, UFH, radiators, MDV, guest house AC).
 - [**access-control.md**](access-control.md) — Gates, doors, Gate Hubs, cameras, locks.
-- [**solar-battery.md**](solar-battery.md) — Poland-focused solar, battery, backup, and V2G-readiness recommendation for the property.
+- [**solar-battery.md**](solar-battery.md) — Solar, battery, backup, and V2G-readiness recommendation for the property.
 
 ### Cross-References
 
