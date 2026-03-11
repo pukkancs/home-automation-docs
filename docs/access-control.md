@@ -2,7 +2,7 @@
 
 *Last updated: 2026-02-26*
 
-Gates, doors, Gate Hubs, cameras, and locks. For property layout see [property-overview.md](property-overview.md). For cabling see [networking.md](networking.md).
+Gates, doors, Gate Hubs, cameras, and locks. For property layout see [property-overview.md](property-overview.md). For cabling see [networking.md](networking.md), especially the guest-house and door-run planning sections.
 
 ---
 
@@ -70,7 +70,7 @@ No UniFi Door Hub or electric locks on house or guest doors. Garage opener not w
 
 ### 7. Guest House Front Door
 
-- Add **UniFi Door Hub Mini**. CAT6a — part of direct Rack→Guest House cable bundle (see [networking.md](networking.md#3-cable-routing--guest-house)).
+- Add **UniFi Door Hub Mini**. CAT6a — part of direct Rack→Guest House cable bundle (see [networking.md](networking.md)).
 - Same lock strategy as main house: knob-key + fail-safe electric; retain original for absences.
 - Outside: G6 Entry.
 

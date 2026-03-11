@@ -85,7 +85,7 @@ Network and infrastructure for the home automation system. For property layout s
 | U7 Outdoor | Rear garden | Reposition for Grill House |
 | UK-ULTRA | Front of house | New deployment |
 
-**New cabling:** 2× CAT6a to engine room; 1× to Living Room ceiling; 2× (1 PoE) to Dining/Kitchen wall; 2× to Living Room entertainment; Guest House cabling (see below); door access runs (see [access-control.md](access-control.md)). Solar/battery (see [solar-battery.md](solar-battery.md)) will improve rack resilience.
+**New cabling:** 2× CAT6a to engine room; 1× to Living Room ceiling; 2× (1 PoE) to Dining/Kitchen wall; 2× to Living Room entertainment; Guest House cabling (see Section 3 below); door access runs (see [access-control.md](access-control.md)). Solar/battery (see [solar-battery.md](solar-battery.md)) will improve rack resilience.
 
 ### 3. Cable Routing & Guest House
 

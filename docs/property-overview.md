@@ -1,6 +1,10 @@
 # Property Overview (PukkancsLak)
 
+*Last updated: 2026-03-11*
+
 Generic reference for the property layout. Link to this document from networking, heating, and other subsystem docs when room or area names are needed.
+
+Related documents: [networking.md](networking.md), [heating.md](heating.md), [access-control.md](access-control.md), [solar-battery.md](solar-battery.md), and the local index [README.md](README.md).
 
 ---
 

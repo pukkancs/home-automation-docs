@@ -1,6 +1,6 @@
 # Heating & Cooling (PukkancsLak)
 
-*Last updated: 2026-02-28*
+*Last updated: 2026-03-11*
 
 Heating, cooling, and climate control. For network and infrastructure see [networking.md](networking.md). For property layout see [property-overview.md](property-overview.md).
 
@@ -9,12 +9,12 @@ Heating, cooling, and climate control. For network and infrastructure see [netwo
 ## Current State
 
 
-## 1. Boiler
+### 1. Boiler
 
 - **Current:** An existing (legacy) boiler is in use.
 - The boiler is fired by the Salus wiring centre when any zone calls for heat.
 
-## 2. UFH Manifold & Wiring Centre
+### 2. UFH Manifold & Wiring Centre
 
 - The **Salus wiring centre** is installed and in use.
 - It receives call-for-heat signals from Salus thermostats and drives the UFH manifold actuators and the boiler.
@@ -28,13 +28,13 @@ Heating, cooling, and climate control. For network and infrastructure see [netwo
 
 So there are **2 UFH zones**: Living Room and Guest House Room 2, each controlled by a **wired Salus thermostat**.
 
-## 3. Radiators
+### 3. Radiators
 
 - **Radiator circuit:** The radiator zone is controlled by a **wireless Salus thermostat** located in the **Master Bedroom**. When it calls for heat, the wiring centre enables the radiator circuit and the boiler fires.
 - **Zone valve actuator:** A **Honeywell VC8010-12** 24V actuator drives the radiator circuit zone valve (2-port or 3-port). The Salus wiring centre energises the actuator when the radiator thermostat calls for heat; the valve opens and allows flow to the radiator circuit.
 - **Radiator heads:** All radiators use **manual thermostatic valve (TRV) heads**. There are no smart TRVs (e.g. Aqara W600) today; room-by-room radiator control is manual via the TRV dials.
 
-## 4. MDV Duct System
+### 4. MDV Duct System
 
 - The **MDV duct system** is installed and serves the main house (Living Room, bedrooms, Playroom, Master Bedroom as per the future design).
 - It is controlled by a **wired controller**: **KJR-12B/DP(T)** with connections A–E (A brown, B red, C yellow, D black, E white). It is **not** integrated with Home Assistant or the rest of the automation stack.
@@ -48,12 +48,12 @@ So there are **2 UFH zones**: Living Room and Guest House Room 2, each controlle
 
 > The system is **Midea** equipment (MDV = Midea Ducted VRF / light-commercial). Service manual: *Service-manual-MIDEA-VERSUS-JOHNSON.compressed.pdf*. Nomenclature: HWFN = Heat pump, Wired control standard, Full DC inverter, R410A. QRC4 = 220–240V 1-phase 50 Hz.
 
-## 5. Guest House Air Conditioning
+### 5. Guest House Air Conditioning
 
 - **2 air conditioning units** are installed in the guest house (one per room).
 - They are controlled **only by their original IR remotes**. There is no Aqara M200 hub or Home Assistant integration for these units today.
 
-## 6. Summary: Current vs. Planned
+### 6. Summary: Current vs. Planned
 
 | Subsystem | Current state | Target (see Planned section below) |
 | :--- | :--- | :--- |
@@ -69,7 +69,7 @@ So there are **2 UFH zones**: Living Room and Guest House Room 2, each controlle
 ## Planned / Target
 
 
-### Core Principles
+### 1. Core Principles
 
 | Principle | Implementation |
 | :--- | :--- |
@@ -79,7 +79,7 @@ So there are **2 UFH zones**: Living Room and Guest House Room 2, each controlle
 | **Safety interlocks** | HA automations enforce hard rules: UFH and cooling never fight each other; MDV cannot heat a room the UFH is already heating. |
 | **Graceful degradation** | If HA is unreachable, thermostats (W500, W600) fall back to their last setpoint. Boiler defaults to a safe flow temperature. The house remains warm. |
 
-### Control Hierarchy (Who Wins)
+#### Control Hierarchy (Who Wins)
 
 ```
 Home Assistant (highest authority)
@@ -89,9 +89,9 @@ Home Assistant (highest authority)
 
 ---
 
-## 2. Physical Layout & Zone Map
+### 2. Physical Layout & Zone Map
 
-### Main House
+#### Main House
 
 | Room | Radiators | UFH | Cooling | Wall Sensor | Zone Type |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -105,7 +105,7 @@ Home Assistant (highest authority)
 
 > **Sensor logic:** W100 display sensors are used in Master Bedroom and Playroom where visibility of current temperature is useful. T1 sensors are used in all other rooms. An outdoor T1 provides the weather compensation input. W500 and W600 have built-in sensors but wall sensors provide a more representative room-average reading. W600 sensors read close to the radiator and should not be used as the sole room temperature source for HA demand logic — always use the wall sensor as the primary temp source for HA automations.
 
-### Guest House
+#### Guest House
 
 | Room | Radiators | UFH | Cooling | Wall Sensor | Zone Type |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -116,7 +116,7 @@ Home Assistant (highest authority)
 
 > **Guest House UFH:** Guest Bedroom, Guest Living Room, Guest Kitchen, and Guest Bathroom share a single UFH zone controlled by W500 #1. Individual room temperature feedback comes from the T1 sensors — HA uses these for humidity management and to decide whether to trigger the IR AirCon in Guest Bedroom and Guest Living Room independently.
 
-### UFH Zones Summary
+#### UFH Zones Summary
 
 | Zone | Location | Thermostat | Wiring Centre Channel |
 | :--- | :--- | :--- | :--- |
@@ -128,9 +128,9 @@ Home Assistant (highest authority)
 
 ---
 
-## 3. Boiler & OpenTherm Strategy
+### 3. Boiler & OpenTherm Strategy
 
-### 3.1 Boiler: Viessmann Vitodens 222-F
+#### 3.1 Boiler: Viessmann Vitodens 222-F
 
 The **Vitodens 222-F** is a condensing combi/system hybrid with an integrated stainless steel DHW cylinder. It is the correct model for this installation.
 
@@ -145,11 +145,11 @@ The **Vitodens 222-F** is a condensing combi/system hybrid with an integrated st
 **Installer instruction (mandatory):**
 > "Do NOT connect the boiler to VitoConnect, Vitotronic, or any Viessmann cloud gateway. Leave the OpenTherm terminals accessible. I will be connecting a third-party OpenTherm controller."
 
-### 3.2 OpenTherm Extension Module
+#### 3.2 OpenTherm Extension Module
 
 The Vitodens 222-F does not expose OpenTherm natively on standard terminals — it requires the **Viessmann OpenTherm Extension Module** (accessory, ordered separately). This connects internally via ribbon cable and exposes a 2-wire OpenTherm bus terminal.
 
-### 3.3 OpenTherm Gateway: Olimex ESP32-POE-ISO + DIYLESS Master Shield
+#### 3.3 OpenTherm Gateway: Olimex ESP32-POE-ISO + DIYLESS Master Shield
 
 This is the bridge between the OpenTherm bus and Home Assistant.
 
@@ -172,7 +172,7 @@ Viessmann 222-F
                                 └── [Cat6 PoE] → USW Pro Max 48 PoE → Home Assistant
 ```
 
-### 3.4 Boiler Control Strategy: "Slow and Low"
+#### 3.4 Boiler Control Strategy: "Slow and Low"
 
 Home Assistant controls the boiler by setting the **flow temperature setpoint** via OpenTherm, rather than switching it on/off. This has two components:
 
@@ -203,9 +203,9 @@ Home Assistant controls the boiler by setting the **flow temperature setpoint** 
 
 ---
 
-## 4. Heating & Cooling Architecture
+### 4. Heating & Cooling Architecture
 
-### 4.1 Zone Schedules
+#### 4.1 Zone Schedules
 
 | Zone | Target Temp | Schedule | Notes |
 | :--- | :--- | :--- | :--- |
@@ -220,7 +220,7 @@ Home Assistant controls the boiler by setting the **flow temperature setpoint** 
 | Guest House (Unoccupied) | **18°C constant** | No schedule; constant setback; AC inhibited | Humidity management active daily |
 | Guest House (Frost Protection) | **7°C minimum** | Boiler only; AC heating activates at critical 4°C | Humidity management active; long absences |
 
-### 4.2 Operating Modes
+#### 4.2 Operating Modes
 
 Two independent `input_select` entities control the system. They are orthogonal — season mode affects *how* systems heat/cool, house modes affect *whether* they run at all and at what target.
 
@@ -257,9 +257,9 @@ Mode transitions:
 
 ---
 
-## 5. UFH Manifold & Wiring Centre
+### 5. UFH Manifold & Wiring Centre
 
-### 5.1 Existing Salus Wiring Centre — To Be Evaluated
+#### 5.1 Existing Salus Wiring Centre — To Be Evaluated
 
 The existing **Salus wiring centre** currently:
 
@@ -278,7 +278,7 @@ The plan is to **reuse** this wiring centre with Aqara W500 thermostats, which a
 
 > **Decision:** **To be taken with the heating installer during design/commissioning.** Until then, this document assumes reuse of the Salus wiring centre, but this is explicitly subject to change.
 
-### 5.2 Zone Channel Mapping
+#### 5.2 Zone Channel Mapping
 
 | Wiring Centre Channel | Old Thermostat | New Thermostat | Zone |
 | :--- | :--- | :--- | :--- |
@@ -286,7 +286,7 @@ The plan is to **reuse** this wiring centre with Aqara W500 thermostats, which a
 | Channel 2 | Salus wired stat | **Aqara W500 #2** | Living Room UFH |
 | Channel 3 | Salus wired stat (if present) | **Aqara W500 #3** (if loop confirmed) | Bathroom UFH |
 
-### 5.3 Radiator Circuit Channel — Modified
+#### 5.3 Radiator Circuit Channel — Modified
 
 Previously the radiator zone was driven by a single wireless Salus thermostat covering all radiators. With W600 TRVs installed on every radiator, individual room thermostats are no longer needed. The radiator circuit channel on the wiring centre is rewired as follows:
 
@@ -297,7 +297,7 @@ Previously the radiator zone was driven by a single wireless Salus thermostat co
 
 This gives a clean master shutoff for the entire radiator circuit without touching wiring centre internals.
 
-### 5.4 Aqara W500 — Key Properties
+#### 5.4 Aqara W500 — Key Properties
 
 - Zigbee/Matter wall thermostat
 - Volt-free relay output for UFH control
@@ -308,9 +308,9 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 
 ---
 
-## 6. Radiator Control (W600 TRVs)
+### 6. Radiator Control (W600 TRVs)
 
-### 6.1 Aqara W600 — Key Properties
+#### 6.1 Aqara W600 — Key Properties
 
 - Thread/Matter radiator TRV head
 - Reports **valve opening percentage** back to HA — this is the critical data point for load compensation
@@ -318,7 +318,7 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 - Pairs with Aqara M3 Hub (Matter/Thread border router)
 - Supports HA climate entity natively
 
-### 6.2 Radiator Inventory
+#### 6.2 Radiator Inventory
 
 | Location | Quantity | Wall Sensor | Notes |
 | :--- | :--- | :--- | :--- |
@@ -333,7 +333,7 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 
 > **Important:** W600 built-in sensors read temperature near the radiator, which is not representative of room temperature. HA automations must use the dedicated wall sensor (W100 or T1) as the primary temperature source for each room. The W600 sensor is useful only for valve position feedback and load compensation logic.
 
-### 6.3 W600 Demand Aggregation Logic (HA)
+#### 6.3 W600 Demand Aggregation Logic (HA)
 
 ```
 Every 5 minutes:
@@ -354,9 +354,9 @@ Every 5 minutes:
 
 ---
 
-## 7. MDV Duct AirCon Integration
+### 7. MDV Duct AirCon Integration
 
-### 7.1 Equipment & Model Numbers
+#### 7.1 Equipment & Model Numbers
 
 | Component | Model | Notes |
 | :--- | :--- | :--- |
@@ -365,7 +365,7 @@ Every 5 minutes:
 
 The system is **Midea** equipment (MDV = Midea Ducted VRF). Sources: service manual *Service-manual-MIDEA-VERSUS-JOHNSON.compressed.pdf*, WF-60A1 compatibility list [midea.com.ua](https://www.midea.com.ua/en/products/light-commercial-ac-semi-industrial-conditioners/remote-control-panels/wi-fi-module-wf-60a1).
 
-### 7.2 WiFi Integration: WF-60A1 + Midea AC LAN
+#### 7.2 WiFi Integration: WF-60A1 + Midea AC LAN
 
 **WF-60A1 compatibility research (2026-02):**
 
@@ -384,7 +384,7 @@ The system is **Midea** equipment (MDV = Midea Ducted VRF). Sources: service man
 3. WF-60A1 joins **IoT VLAN** (192.168.12.x); Midea AC LAN discovers device on LAN.
 4. HA exposes a single `climate` entity for the MDV system; local control, no cloud required for normal operation.
 
-### 7.3 Scope
+#### 7.3 Scope
 
 The MDV shared duct system serves **5 rooms**:
 - Living Room
@@ -395,7 +395,7 @@ The MDV shared duct system serves **5 rooms**:
 
 There is **no individual room regulation** — the MDV system is shared on/off with mode control (heat/cool/fan). Individual room comfort is achieved by combining MDV with the room's primary heat source (UFH or rads) and using Aqara temp sensors to decide when MDV should run.
 
-### 7.4 MDV/UFH Interlock — Living Room
+#### 7.4 MDV/UFH Interlock — Living Room
 
 The Living Room sits in **both** the UFH zone (W500 #2) and the MDV zone. A mandatory HA automation enforces the interlock:
 
@@ -421,7 +421,7 @@ NEUTRAL SEASON:
   → If cooling is needed: MDV cooling only; UFH remains off
 ```
 
-### 7.5 MDV Demand Logic
+#### 7.5 MDV Demand Logic
 
 Since all 5 MDV rooms share one system, HA uses the **coldest room vs. target** as the demand signal for heating and the **hottest room vs. target** for cooling.
 
@@ -484,9 +484,9 @@ ELSE (no demand):
 
 ---
 
-## 8. Guest House AirCon (IR Control)
+### 8. Guest House AirCon (IR Control)
 
-### 8.1 Hardware: Aqara M200 Hub (PoE)
+#### 8.1 Hardware: Aqara M200 Hub (PoE)
 
 The old AirCon units in Guest Bedroom and Guest Living Room do not have smart connectivity. They are controlled via **IR blasters** using the **Aqara M200 Hub**, which has a built-in IR transmitter.
 
@@ -495,7 +495,7 @@ The old AirCon units in Guest Bedroom and Guest Living Room do not have smart co
 - HA sends IR commands via the M200 to replicate remote control actions
 - Pairs with the Aqara M3 Hub
 
-### 8.2 Limitations & Mitigation
+#### 8.2 Limitations & Mitigation
 
 IR control has no state feedback — HA cannot confirm the AC unit turned on or what mode it's in. Mitigation:
 
@@ -503,7 +503,7 @@ IR control has no state feedback — HA cannot confirm the AC unit turned on or 
 - Aqara room temp sensors provide indirect feedback — if room temp moves toward setpoint after an IR ON command, assume it worked
 - **Interlock:** HA automation prevents IR AC and UFH from running simultaneously in the same Guest House room
 
-### 8.3 Guest House Occupancy Mode
+#### 8.3 Guest House Occupancy Mode
 
 The Guest House operates on a dedicated `input_select.guest_house_mode` with three states:
 
@@ -524,7 +524,7 @@ input_select.guest_house_mode:
 
 ---
 
-## 9. Office AirCon (Gree/LG)
+### 9. Office AirCon (Gree/LG)
 
 The Office has a smart AirCon unit (Gree or LG — confirm model). This is integrated via the **Gree integration** (built into Home Assistant core — no HACS required).
 
@@ -538,9 +538,9 @@ The Office has a smart AirCon unit (Gree or LG — confirm model). This is integ
 
 ---
 
-## 10. Sensor Strategy
+### 10. Sensor Strategy
 
-### 10.1 Temperature Sensors — Aqara TVOC T1 (Zigbee)
+#### 10.1 Temperature Sensors — Aqara TVOC T1 (Zigbee)
 
 One sensor per room for room temperature feedback to HA. These drive the demand logic for UFH, radiators, MDV, and IR AC.
 
@@ -563,15 +563,15 @@ One sensor per room for room temperature feedback to HA. These drive the demand 
 
 > **Humidity:** The Aqara T1, W100, and W500 all report **temperature and humidity**. No additional humidity sensors are needed. The Guest House T1 sensors (Guest Bedroom, Guest Living Room) provide the humidity readings used by the Unoccupied and Frost Protection humidity management automations (Automation 11). Ensure HA exposes the humidity entities from these T1 devices.
 
-### 10.2 W100 Display Sensor
+#### 10.2 W100 Display Sensor
 
 The **Aqara W100** combines a temperature/humidity sensor with a small e-ink display. Use in **Master Bedroom** and **Playroom** where visibility of current temp is useful. Other rooms use T1 sensors. Stays in the Aqara ecosystem.
 
 ---
 
-## 11. Schedule & Automation Logic
+### 11. Schedule & Automation Logic
 
-### 11.1 HA Entities Overview
+#### 11.1 HA Entities Overview
 
 ```yaml
 input_select:
@@ -612,7 +612,7 @@ input_text:
                          # previous mode after an OFF state
 ```
 
-### 11.2 Key Automations
+#### 11.2 Key Automations
 
 **Automation 1: Season Mode Auto-Transition**
 ```
@@ -810,7 +810,7 @@ Limitations (IR control):
   assume success. If not, HA can log a warning for manual inspection.
 ```
 
-### 11.3 Presence & Occupancy
+#### 11.3 Presence & Occupancy
 
 - **Children's rooms:** Time-schedule based (school hours)
 - **Playroom:** Time-schedule based (2pm–9pm active)
@@ -821,9 +821,9 @@ Limitations (IR control):
 
 ---
 
-## 12. Network Architecture
+### 12. Network Architecture
 
-### 12.1 Core Hardware
+#### 12.1 Core Hardware
 
 | Device | Role | Uplink | Location |
 | :--- | :--- | :--- | :--- |
@@ -842,7 +842,7 @@ For a full description of the network topology, VLANs, WiFi/Thread configuration
 
 - [`networking.md`](networking.md)
 
-### 12.2 VLAN Design
+#### 12.2 VLAN Design
 
 | Network | VLAN ID | Subnet | Devices | WAN |
 | :--- | :--- | :--- | :--- | :--- |
@@ -856,14 +856,14 @@ For a full description of the network topology, VLANs, WiFi/Thread configuration
 - WAN access restricted — only allowed for OTA updates (specific IP/domain whitelist)
 - No access to Core or Server VLANs (unidirectional — HA on IoT can query Unraid on Server VLAN, not reverse)
 
-### 12.3 Thread Mesh Configuration
+#### 12.3 Thread Mesh Configuration
 
 - Thread runs on **Channel 25** — chosen to minimise overlap with 2.4GHz WiFi bands
 - Aqara M3 acts as Thread Border Router
 - W600 TRVs and W500 thermostats join Thread mesh natively
 - U7 Pro XG APs maintain Thread channel discipline — configure in UniFi settings
 
-### 12.4 Connectivity Map
+#### 12.4 Connectivity Map
 
 ```
 [Fiber/Cable WAN]
@@ -881,7 +881,7 @@ For a full description of the network topology, VLANs, WiFi/Thread configuration
 
 ---
 
-## 13. Control & Display Hierarchy
+### 13. Control & Display Hierarchy
 
 A layered control hierarchy prevents app fatigue and keeps the system guest-accessible.
 
@@ -896,9 +896,9 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 ---
 
-## 14. Hardware Bill of Materials
+### 14. Hardware Bill of Materials
 
-### Boiler & OpenTherm
+#### Boiler & OpenTherm
 
 | Item | Qty | Supplier (Poland) |
 | :--- | :--- | :--- |
@@ -907,7 +907,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 | Olimex ESP32-POE-ISO | 1 | Botland.pl, Nettigo.pl, Olimex direct |
 | DIYLESS OpenTherm Master Shield | 1 | diyless.pl, Nettigo.pl |
 
-### Thermostats & TRVs
+#### Thermostats & TRVs
 
 | Item | Qty | Supplier (Poland) |
 | :--- | :--- | :--- |
@@ -915,28 +915,28 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 | Aqara W600 Radiator TRV | 8 minimum (survey required — 1 per rad head) | x-kom.pl, Allegro |
 | Aqara W100 Display Sensor | 2 (Master Bedroom, Playroom) | x-kom.pl, Allegro |
 
-### Sensors
+#### Sensors
 
 | Item | Qty | Rooms | Supplier (Poland) |
 | :--- | :--- | :--- | :--- |
 | Aqara Temperature Sensor T1 (indoor) | 7 | Alex, Vicky, Office, Guest Bedroom, Guest Living Room, Guest Kitchen, Guest Bathroom | x-kom.pl, Allegro, Media Expert |
 | Aqara Temperature Sensor T1 (outdoor rated) | 1 | Outdoor — weather compensation heating curve input | x-kom.pl, Allegro |
 
-### Switching & Control
+#### Switching & Control
 
 | Item | Qty | Supplier (Poland) |
 | :--- | :--- | :--- |
 | Shelly Plus 1 (DIN rail) | 1 (rad circuit enable) | Botland.pl, Nettigo.pl |
 | Shelly Wall Display XL | 3 (couch, upstairs, guest room 2) | Botland.pl, Nettigo.pl |
 
-### AirCon Integration
+#### AirCon Integration
 
 | Item | Qty | Supplier (Poland) |
 | :--- | :--- | :--- |
 | Aqara M200 Hub (PoE) | 2 (Guest House rooms) | x-kom.pl, Allegro |
 | Midea WF-60A1 WiFi module | 1 | Midea / HVAC distributor. Compatible with MTB-36HWFN1 (see Section 7.2). |
 
-### Compute & Network (if not already owned)
+#### Compute & Network (if not already owned)
 
 | Item | Qty | Notes |
 | :--- | :--- | :--- |
@@ -945,7 +945,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 ---
 
-## 15. Risks & Critical Maintenance Notes
+### 15. Risks & Critical Maintenance Notes
 
 | Risk | Mitigation |
 | :--- | :--- |
@@ -960,7 +960,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 ---
 
-## 16. Open Items & Pre-Purchase Decisions
+### 16. Open Items & Pre-Purchase Decisions
 
 | # | Item | Owner | Status |
 | :--- | :--- | :--- | :--- |
@@ -978,7 +978,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 ---
 
-## 17. System Architecture Diagram
+### 17. System Architecture Diagram
 
 ```
 PHYSICAL LOCATION       EQUIPMENT & CONNECTIVITY
@@ -1058,7 +1058,7 @@ DISPLAYS                [UniFi Connect 21"] — Living Room (Command Tower)
 
 ---
 
-## 18. Product References
+### 18. Product References
 
 Official product pages and documentation:
 
