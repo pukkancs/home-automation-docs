@@ -447,8 +447,8 @@ For planning purposes, use these simplified all-in import rates:
 | Tariff | Planning rate | Notes |
 | :--- | :--- | :--- |
 | **PGE G11** | **~1.14 PLN/kWh flat** | Simple but weakest fit for PV + battery + EV |
-| **PGE G12** | **~1.25 PLN/kWh day / ~0.94 PLN/kWh night** | Good if flexible charging happens mostly on weekday nights |
-| **PGE G12w** | **~1.30 PLN/kWh day / ~0.68 PLN/kWh low zone** | Best planning fit if EV charging and battery top-up are pushed into cheap night / weekend windows |
+| **PGE G12** | **~1.25 PLN/kWh day / ~0.61 PLN/kWh night** | Cheapest option if imported energy is pushed mainly into weekday night hours |
+| **PGE G12w** | **~1.30 PLN/kWh day / ~0.69 PLN/kWh low zone** | More flexible than G12 because weekends and holidays are cheap, but not the cheapest night-rate option |
 
 These figures are intentionally simplified:
 
@@ -458,8 +458,8 @@ These figures are intentionally simplified:
 
 Recommended default tariff:
 
-- choose **PGE G12w** as the default planning tariff for this project
-- choose **PGE G12** only if actual usage ends up concentrated on weekday nights and not much weekend low-zone charging happens
+- choose **PGE G12** as the default planning tariff if EV charging and battery top-up are concentrated in night hours
+- choose **PGE G12w** only if weekend and holiday low-zone charging flexibility is important enough to justify the slightly higher low-zone rate
 
 Useful timing for automation under the multi-zone tariff:
 
@@ -494,12 +494,12 @@ For ROI modelling below, use these planning assumptions:
 - house load: **8 MWh/year**
 - EV load: **6 MWh/year**
 - tariff benchmark:
-  - **house daytime imports:** `PGE G12w day ~1.30 PLN/kWh`
-  - **EV charging and battery top-up imports:** `PGE G12w low zone ~0.68 PLN/kWh`
+  - **house daytime imports:** `PGE G12 day ~1.25 PLN/kWh`
+  - **EV charging and battery top-up imports:** `PGE G12 night ~0.61 PLN/kWh`
 - solar export value in net-billing: modeled conservatively, so ROI numbers are **indicative**, not bank-grade
 - EV charging is assumed to happen either:
   - from **solar surplus**, or
-  - from the **low-zone tariff**
+  - from the **night tariff**
 - simple payback only; no financing cost, degradation curve, or maintenance reserve included
 
 Model the following subsidy scenarios:
@@ -514,19 +514,19 @@ Indicative annual savings using the simplified **day / low-zone planning model**
 
 | Variant | Indicative annual savings | Notes |
 | :--- | :--- | :--- |
-| **GoodWe + Lynx Home F + 8-9 kWp PV** | **~5,900-7,000 PLN/year** | Best value inside the official-HA shortlist |
-| **SolaX + Triple Power + 8-9 kWp PV** | **~5,800-6,900 PLN/year** | Similar expected economics to GoodWe |
-| **Fronius + BYD + 8-9 kWp PV** | **~6,100-7,300 PLN/year** | Best premium shortlist option |
-| **Deye + Deye + ~8.2 kWp PV** | **~5,800-7,000 PLN/year** | Value baseline, not shortlist-compliant |
+| **GoodWe + Lynx Home F + 8-9 kWp PV** | **~5,700-6,700 PLN/year** | Best value inside the official-HA shortlist |
+| **SolaX + Triple Power + 8-9 kWp PV** | **~5,600-6,600 PLN/year** | Similar expected economics to GoodWe |
+| **Fronius + BYD + 8-9 kWp PV** | **~5,900-7,000 PLN/year** | Best premium shortlist option |
+| **Deye + Deye + ~8.2 kWp PV** | **~5,600-6,800 PLN/year** | Value baseline, not shortlist-compliant |
 
 Indicative simple payback under the simplified day / low-zone planning model:
 
 | Variant | With `23k` PV + battery subsidy | With `23k` battery-only subsidy | With `0k` subsidy |
 | :--- | :--- | :--- | :--- |
-| **GoodWe + Lynx Home F + 8-9 kWp PV** | **~4.5-6.8 years** | **~4.5-6.8 years** | **~7.4-10.5 years** |
-| **SolaX + Triple Power + 8-9 kWp PV** | **~4.3-6.5 years** | **~4.3-6.5 years** | **~7.2-10.1 years** |
-| **Fronius + BYD + 8-9 kWp PV** | **~5.5-8.2 years** | **~5.5-8.2 years** | **~8.8-12.3 years** |
-| **Deye + Deye + ~8.2 kWp PV** | **~3.2-4.9 years** | **~3.2-4.9 years** | **~6.4-8.4 years** |
+| **GoodWe + Lynx Home F + 8-9 kWp PV** | **~4.7-7.2 years** | **~4.7-7.2 years** | **~7.8-11.0 years** |
+| **SolaX + Triple Power + 8-9 kWp PV** | **~4.5-6.9 years** | **~4.5-6.9 years** | **~7.5-10.5 years** |
+| **Fronius + BYD + 8-9 kWp PV** | **~5.8-8.8 years** | **~5.8-8.8 years** | **~9.4-13.2 years** |
+| **Deye + Deye + ~8.2 kWp PV** | **~3.3-5.3 years** | **~3.3-5.3 years** | **~6.6-9.0 years** |
 
 Interpretation using the simplified day / low-zone planning model:
 
@@ -540,8 +540,9 @@ Effect of tariff choice on ROI:
 - moving from **G11** to a well-used multi-zone tariff is beneficial because it lowers the cost of:
   - EV charging in low-solar months
   - battery top-up on weak-forecast nights
-- for this house, **G12w** is a better simple planning assumption than **G11**, because the EV and battery strategy can push a large share of imports into cheap night / weekend windows
-- relative to **G11**, a well-used multi-zone tariff should shorten simple payback by roughly **0.5-1.5 years**, depending on how much EV charging actually lands in low-zone hours and how aggressively HA shifts battery top-up away from the day rate
+- for this house, **G12** is the better default economic assumption if most imported energy lands in weekday night hours
+- **G12w** remains useful if weekends and holidays are important charging windows, but it should be treated as the more flexible tariff rather than the cheapest one
+- relative to **G11**, a well-used multi-zone tariff should shorten simple payback by roughly **0.5-1.5 years**, depending on how much EV charging actually lands in night or low-zone hours and how aggressively HA shifts battery top-up away from the day rate
 
 Updated recommendation under the new assumptions:
 
@@ -551,10 +552,10 @@ Updated recommendation under the new assumptions:
 
 Recommended spending strategy:
 
-- **best pure ROI overall:** `Deye + Deye + PGE G12w`
-- **best shortlist value:** `GoodWe + Lynx Home F + PGE G12w`
-- **best shortlist quote-sensitive alternative:** `SolaX + Triple Power + PGE G12w`
-- **best premium / smart-home fit:** `Fronius + BYD + PGE G12w`
+- **best pure ROI overall:** `Deye + Deye + PGE G12`
+- **best shortlist value:** `GoodWe + Lynx Home F + PGE G12`
+- **best shortlist quote-sensitive alternative:** `SolaX + Triple Power + PGE G12`
+- **best premium / smart-home fit:** `Fronius + BYD + PGE G12`
 
 ### 12. V2G / V2H Expansion Readiness
 
