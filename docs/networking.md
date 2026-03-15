@@ -72,7 +72,7 @@ Network and infrastructure for the home automation system. For property layout s
 
 ### 2. Physical Topology
 
-**Core devices** (Garage rack): UDM SE, Aggregation Switch, USW Pro Max 48 PoE, USW XG 10 PoE, UNVR, Unraid, Pi 5 (HA), Aqara M3, Aqara M200×2 (Guest House IR), Olimex ESP32-POE-ISO (OpenTherm). **USW Ultra 60W** in engine room fed by 2× new CAT6a from rack.
+**Core devices** (Garage rack): UDM SE, Aggregation Switch, USW Pro Max 48 PoE, USW XG 10 PoE, UNVR, Unraid, Pi 5 (HA), Aqara M3, Aqara M200×2 (Guest House IR), Nodo OTGW (OpenTherm). **USW Ultra 60W** in engine room fed by 2× new CAT6a from rack.
 
 **Access points:**
 

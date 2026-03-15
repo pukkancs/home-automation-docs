@@ -1,6 +1,6 @@
 # Heating & Cooling (PukkancsLak)
 
-*Last updated: 2026-03-11*
+*Last updated: 2026-03-15*
 
 Heating, cooling, and climate control. For network and infrastructure see [networking.md](networking.md). For property layout see [property-overview.md](property-overview.md).
 
@@ -57,7 +57,7 @@ So there are **2 UFH zones**: Living Room and Guest House Room 2, each controlle
 
 | Subsystem | Current state | Target (see Planned section below) |
 | :--- | :--- | :--- |
-| Boiler | Legacy boiler, on/off via Salus | Viessmann 222-F, OpenTherm modulation, HA control |
+| Boiler | Legacy boiler, on/off via Salus | Viessmann 111-F, OpenTherm modulation, HA control |
 | UFH | 2 zones, wired Salus thermostats (Living Room, Guest House R2) | Aqara W500 thermostats, 2–3 zones, HA schedules |
 | Radiators | Wireless Salus stat (Master Bedroom), manual TRVs | W600 TRVs, Shelly rad circuit enable, HA demand logic |
 | MDV duct | Installed, standalone control | WF-60A1 WiFi + Midea AC LAN, HA interlocks with UFH |
@@ -130,49 +130,122 @@ Home Assistant (highest authority)
 
 ### 3. Boiler & OpenTherm Strategy
 
-#### 3.1 Boiler: Viessmann Vitodens 222-F
+#### 3.1 Boiler: Viessmann Vitodens 111-F (B1SG)
 
-The **Vitodens 222-F** is a condensing combi/system hybrid with an integrated stainless steel DHW cylinder. It is the correct model for this installation.
+The **Vitodens 111-F** is a floor-standing condensing storage combi with an integrated 130 L DHW cylinder. It is the correct model for this installation.
+
+**Viessmann Quote (ref: 9520283558, 12 Mar 2026):**
+
+A formal quote has been received from Viessmann Sp. z o.o. (contact: Karol Wieniawski, +48 782 756 346, Karol.Wieniawski@carrier.com) titled *"Pakiet Vitodens 111-F B1SG — sterowanie OpenTherm"*. The quote covers the boiler package and the complete hydraulic distribution system. Valid for 1 month from 12 Mar 2026.
+
+**Two kW variants quoted (select one based on heat loss calc):**
+
+| Pos. | Variant | Order No. | Net Price | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| 10 | **Vitodens 111-F B1SG 3.2–32 kW** | Z031665 | 14 958 PLN | Package with top hydraulic/gas connections (rear). Side connection option available. |
+| 20* | **Vitodens 111-F B1SG 3.2–25 kW** (alternative) | Z031664 | 14 319 PLN | Same package, lower output. *Not included in quote total — select one.* |
+
+> **Decision required:** A **heat loss calculation (PN-EN 12831)** must be completed before selecting the kW variant. For a 250 m² property with ~2005 Polish insulation standards (wall U ≈ 0.30 W/m²K), expect **19–25 kW** total demand (main house + guest house). The 25 kW variant (Z031664) is the likely candidate; the 32 kW risks short-cycling even with OpenTherm modulation. Commission a Polish HVAC engineer to perform the calc.
 
 **Key specifications relevant to this design:**
-- Native **OpenTherm interface** (requires Viessmann OpenTherm Extension Module — see below)
-- Minimum modulation: **~1.9 kW** — enables true "slow and low" operation
+- **OpenTherm built-in** — 2-wire OT terminals on the boiler; no extension module required (unlike 222-F). Confirmed by Viessmann in quote position 80: *"Możliwe jest wykorzystanie złącza OpenTherm do podłączenia zewnętrznej automatyki."*
+- Modulation range depends on variant: 25 kW → 3.2–25 kW (**1:8**); 32 kW → 3.2–32 kW (**1:10**)
+- MatriX-Plus burner with Lambda Pro Plus combustion control
 - Inox-Radial stainless heat exchanger — long service life
+- Built-in WiFi module (ViCare) — **will NOT be used**; all control via OpenTherm
 - Widely serviced across Poland (dense Viessmann dealer network)
 
-> **Critical pre-purchase action:** A **heat loss calculation (PN-EN 12831)** must be completed before selecting the kW output variant. For a property of this size (Main House + Guest House), expect 24–35 kW, but do not guess — an oversized boiler will short-cycle even with OpenTherm modulation. Commission a Polish HVAC engineer to perform the calc.
-
 **Installer instruction (mandatory):**
-> "Do NOT connect the boiler to VitoConnect, Vitotronic, or any Viessmann cloud gateway. Leave the OpenTherm terminals accessible. I will be connecting a third-party OpenTherm controller."
+> "Do NOT connect the boiler to VitoConnect, Vitotronic, or any Viessmann cloud gateway. Do NOT connect a Viessmann outdoor temperature sensor to the boiler — weather compensation is handled externally via OpenTherm. Leave the OpenTherm terminals accessible. I will be connecting a third-party OpenTherm controller."
 
-#### 3.2 OpenTherm Extension Module
+#### 3.2 OpenTherm on 111-F
 
-The Vitodens 222-F does not expose OpenTherm natively on standard terminals — it requires the **Viessmann OpenTherm Extension Module** (accessory, ordered separately). This connects internally via ribbon cable and exposes a 2-wire OpenTherm bus terminal.
+The Vitodens 111-F (1xx series) exposes **OpenTherm directly** on the control board — no Viessmann OpenTherm Extension Module is needed. A 2-wire OT bus runs from the boiler terminals to the gateway. For 1xx series, Viessmann does **not** offer the WAGO Modbus gateway; OpenTherm is the supported path for external automation.
 
-#### 3.3 OpenTherm Gateway: Olimex ESP32-POE-ISO + DIYLESS Master Shield
+**Viessmann official confirmation (quote position 80):**
+> *"Dla kotłów Vitodens serii 1xx nie ma możliwości skorzystania z bramki WAGO i przekazania danych do zewnętrznych systemów nadzoru i sterowania. Możliwe jest wykorzystanie złącza OpenTherm do podłączenia zewnętrznej automatyki. Automatyka OpenTherm poza zakresem oferty!"*
+>
+> Translation: For Vitodens 1xx series boilers, the WAGO gateway is not available. An OpenTherm connection for external automation **is** available. OpenTherm automation is outside the scope of Viessmann's quote — this is our responsibility (Nodo OTGW + HA).
+
+#### 3.3 Hydraulic Distribution (from Viessmann Quote)
+
+The Viessmann quote specifies a **3-circuit hydraulic separator** with dedicated pump groups. This defines the physical plumbing layout between the boiler and the heating zones.
+
+**Hydraulic separator:**
+
+| Pos. | Item | Order No. | Qty | Net Price | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 40 | Rozdzielacz ze sprzęgłem — 3 heating circuits | 7773837 | 1 | 2 277 PLN | Hydraulic separator with low-loss header; distributes boiler flow to 3 independent circuits |
+
+**Pump groups:**
+
+| Pos. | Item | Order No. | Qty | Net Unit Price | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 50 | **GRA2** DN25 / Wilo PARA 25/6 — with mixing valve + 3-point actuator (230 V) | 7183336 | 2 | 2 144 PLN | Mixed circuits — flow temperature blended down for UFH protection |
+| 60 | **GDA2** DN25 / Wilo PARA 25/6 — without mixing valve (direct circuit) | 7183292 | 1 | 1 577 PLN | Direct circuit — full boiler flow temperature to radiators |
+
+**DHW circulation pump connection set:**
+
+| Pos. | Item | Order No. | Qty | Net Price | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 30 | Zestaw przyłączeniowy pompy cyrkulacyjnej | ZK05978 | 1 | 983 PLN | Connection kit for DHW recirculation pump (pump itself to be sourced separately if not included) |
+
+**Flue system:**
+
+| Pos. | Item | Order No. | Qty | Net Price | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 70 | Zestaw bazowy w szacht 80/125 | 7142128 | 1 | 567 PLN | Concentric flue base kit: 90° tee, 300 mm pipe, rosette, shaft cover with rain collar, flue elbow + bracket |
+
+> **Flue note:** The quote includes a basic flue kit only. Viessmann's note states: *"Zestawienie elementów nie gwarantuje prawidłowego montażu komina. Przed złożeniem zamówienia należy skonsultować dobór elementów z wykonawcą instalacji spalinowej."* — flue element selection must be verified with the flue installer before ordering.
+
+**Circuit assignment (guest house confirmed as shared boiler with own UFH loop):**
+
+```
+Viessmann 111-F B1SG
+  │
+  └── Hydraulic Separator (7773837) — 3 circuits
+        │
+        ├── Circuit 1 (GRA2 — mixed) → UFH Main House
+        │     Mixing valve blends flow down to ~35–45°C for UFH loops
+        │     Feeds: Living Room (W500 #2), Bathroom (W500 #3 if confirmed)
+        │
+        ├── Circuit 2 (GRA2 — mixed) → UFH Guest House
+        │     Mixing valve blends flow down to ~35–45°C for UFH loops
+        │     Feeds: Guest House zone (W500 #1)
+        │
+        └── Circuit 3 (GDA2 — direct) → Radiator Circuit
+              No mixing — radiators receive full boiler flow temp (up to 55–60°C)
+              Feeds: All W600 TRV-equipped radiators
+              Master enable: Shelly Plus 1 relay (HA demand logic)
+```
+
+> **Key design point:** The 2x GRA2 pump groups with mixing valves solve the UFH temperature protection requirement. UFH loops will never receive water above the mixing valve setpoint (~35–45°C), even when the boiler runs at higher flow temperatures for the radiator circuit. This eliminates the need for a separate thermostatic blending valve on the UFH manifold.
+
+> **DHW priority:** The 111-F has an internal diverter valve. When DHW is demanded (cylinder temperature drops below setpoint), the boiler suspends central heating and diverts flow to the integrated 130 L cylinder. All three heating circuits are temporarily starved. HA should account for DHW reheat pauses in its demand logic — flow temperature setpoint changes sent during a DHW cycle will not take effect until the cylinder is satisfied.
+
+> **Confirmed:** Guest house runs from the same boiler and has its own UFH loop controlled by W500 #1. The exact circuit numbering (which GRA2 port = main house, which = guest house) should be confirmed with the HVAC engineer during installation. The GDA2 (direct, no mixing) must be assigned to radiators — never to UFH.
+
+#### 3.4 OpenTherm Gateway: Nodo OTGW UTP + Ethernet + PoE/USB-C splitter
 
 This is the bridge between the OpenTherm bus and Home Assistant.
 
 | Component | Role |
 | :--- | :--- |
-| **Olimex ESP32-POE-ISO** | ESP32 microcontroller, **PoE-powered** (no wall PSU), **3000V galvanic isolation** protecting the UniFi switch from boiler electrical noise |
-| **DIYLESS OpenTherm Master Shield** | Translates ESP32 GPIO to OpenTherm bus signalling |
-| **ESPHome firmware** | Runs on the ESP32; exposes all OpenTherm data points to HA natively |
-
-**Why this over a standalone OTGW:** Galvanic isolation is critical — without it, boiler electrical transients can damage PoE switch hardware. The Olimex ISO model provides 3000V isolation. ESPHome integration is also more maintainable long-term than a separate HACS OTGW integration.
+| **Nodo OpenTherm Gateway UTP** | PIC-based OTGW kit ([Nodo-shop](https://www.nodo-shop.nl/en/our-products/327-opentherm-gateway-builder-utp.html)); sits on the 2-wire OT bus. Supports **no thermostat present** — HA is the sole controller. |
+| **Ethernet interface** | Optional board (e.g. USR-TCP232-T2) added to the OTGW for TCP connectivity so HA can talk to the gateway over the LAN (no USB/serial run to the server). |
+| **PoE to USB Type C splitter** | 802.3af PoE from the switch is converted to 5 V USB (Type C or A) to power the OTGW at the engine room; no separate mains outlet required. |
+| **Home Assistant** | **OpenTherm Gateway** integration (pyotgw) connects to the OTGW via TCP (Ethernet module) and exposes setpoints, sensors, and controls. |
 
 **Wiring:**
 ```
-Viessmann 222-F
-  └── [Internal ribbon cable]
-        └── Viessmann OT Extension Module
-              └── [2-wire OpenTherm bus / twin-core 18/2 bell wire]
-                    └── DIYLESS Master Shield
-                          └── Olimex ESP32-POE-ISO
-                                └── [Cat6 PoE] → USW Pro Max 48 PoE → Home Assistant
+Viessmann 111-F
+  └── [2-wire OpenTherm bus / twin-core 18/2 bell wire]
+        └── Nodo OTGW UTP (Ethernet module fitted)
+              ├── [USB] ← PoE-to-USB Type C splitter ← [Cat6 PoE] from USW Pro Max 48
+              └── [Ethernet] → Cat6 → USW Pro Max 48 (IoT VLAN) → Home Assistant
 ```
 
-#### 3.4 Boiler Control Strategy: "Slow and Low"
+#### 3.5 Boiler Control Strategy: "Slow and Low"
 
 Home Assistant controls the boiler by setting the **flow temperature setpoint** via OpenTherm, rather than switching it on/off. This has two components:
 
@@ -192,14 +265,15 @@ Home Assistant controls the boiler by setting the **flow temperature setpoint** 
 
 **Combined effect:** The boiler modulates its burner output precisely to what is needed, running at low flame for long periods rather than cycling on/off at full power. Condensing efficiency is maximised, boiler wear is minimised.
 
-**ESPHome OpenTherm data points exposed to HA:**
-- `ch_setpoint` — flow temperature setpoint (HA writes this)
-- `boiler_temperature` — actual flow temperature (read)
-- `relative_modulation_level` — burner modulation % (read, for monitoring)
-- `flame_status` — burner on/off (read)
-- `fault_indication` — boiler fault flag (read, triggers HA alert)
-- `outside_temperature` — if boiler has outdoor sensor fitted (read)
-- `dhw_setpoint` — domestic hot water setpoint (HA can manage this too)
+**OpenTherm Gateway (OTGW) entities in HA:**  
+The [OpenTherm Gateway](https://www.nodo-shop.nl/en/our-products/327-opentherm-gateway-builder-utp.html) integration exposes (among others):
+- **Control setpoint** — flow temperature setpoint (HA writes this)
+- **Boiler water temperature** — actual flow temperature (read)
+- **Relative modulation level** — burner modulation % (read, for monitoring)
+- **Flame status** — burner on/off (read)
+- **Fault indication** — boiler fault flag (read, triggers HA alert)
+- **Outside temperature** — if boiler has outdoor sensor fitted (read)
+- **DHW setpoint** — domestic hot water setpoint (HA can manage this too)
 
 ---
 
@@ -328,6 +402,13 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 | Playroom | 1x W600 | W100 | Active 2pm–9pm schedule |
 | Master Bedroom | 2x W600 | W100 | Setback schedule; MDV also serves this room |
 | Office | 1x W600 | T1 | Occupancy-based schedule; Gree/LG also serves this room |
+
+**W600 — Office pairing codes (reference):**
+
+| Protocol | Pairing code |
+| :--- | :--- |
+| Matter | 1369-274-4889 |
+| Aqara | 2067-4710 |
 
 **Total W600 count: 8 minimum.** Confirm during site survey — if any room has additional radiators not listed, add one W600 per head.
 
@@ -651,7 +732,7 @@ Trigger: outdoor temperature sensor updates (every 15 min)
 Action:
   flow_temp = heating_curve(outdoor_temp)
   # Example curve: flow = 70 - (2.0 * outdoor_temp), clamped 35–60°C
-  Write flow_temp to OT setpoint via ESPHome
+  Write flow_temp to OT setpoint via OpenTherm Gateway integration
 ```
 
 **Automation 3: Load Compensation (TRV Feedback)**
@@ -836,7 +917,7 @@ Limitations (IR control):
 | **Raspberry Pi 5 (PoE+, NVMe SSD)** | Home Assistant host | PoE+ from USW Pro Max 48 | Garage rack |
 | **Aqara M3 Hub** | Zigbee coordinator + Matter/Thread border router | PoE from USW Pro Max 48 | Garage / Central |
 | **Aqara M200 Hubs x2** | IR control for Guest House ACs | PoE from USW Pro Max 48 | Guest House rooms |
-| **Olimex ESP32-POE-ISO** | OpenTherm gateway (ESPHome) | PoE from USW Pro Max 48 | Engine Room |
+| **Nodo OTGW UTP (Ethernet)** | OpenTherm gateway | PoE via USB-C splitter + Ethernet to USW Pro Max 48 | Engine Room |
 
 For a full description of the network topology, VLANs, WiFi/Thread configuration, and security rules, see:
 
@@ -848,7 +929,7 @@ For a full description of the network topology, VLANs, WiFi/Thread configuration
 | :--- | :--- | :--- | :--- | :--- |
 | **Core** | 1 | `192.168.10.x` | UDM SE, switches, APs (management) | Yes |
 | **Server** | 6 | `192.168.1.x` | Unraid Server | Yes |
-| **IoT** | 3 | `192.168.12.x` | Raspberry Pi 5 (HA), Olimex gateway, M3 Hub, M200 Hubs, Shelly devices, MDV WF-60A1, Gree/LG unit | Restricted |
+| **IoT** | 3 | `192.168.12.x` | Raspberry Pi 5 (HA), Nodo OTGW (Ethernet), M3 Hub, M200 Hubs, Shelly devices, MDV WF-60A1, Gree/LG unit | Restricted |
 | **NOT** | 4 | `192.168.13.x` | Non-internet things (WAN blocked) | **No** |
 
 **IoT VLAN rules:**
@@ -872,7 +953,7 @@ For a full description of the network topology, VLANs, WiFi/Thread configuration
                 ├── [10G SFP+] USW Pro Max 48 PoE
                 │              ├── [PoE+]  Raspberry Pi 5 (Home Assistant)
                 │              ├── [PoE]   Aqara M3 Hub
-                │              ├── [PoE]   Olimex ESP32-POE-ISO (Engine Room, OpenTherm)
+                │              ├── [PoE + Ethernet]   Nodo OTGW (Engine Room, OpenTherm; PoE→USB-C splitter)
                 │              └── [PoE]   Aqara M200 x2 (Guest House)
                 ├── [10G SFP+] USW XG 10 PoE
                 │              └── [PoE]   U7 Pro XG APs (all access points)
@@ -898,14 +979,27 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 ### 14. Hardware Bill of Materials
 
-#### Boiler & OpenTherm
+#### Boiler, Hydraulics & OpenTherm (Viessmann Quote 9520283558)
 
-| Item | Qty | Supplier (Poland) |
+| Pos. | Item | Order No. | Qty | Net Price | Supplier |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 10 | Viessmann Vitodens 111-F B1SG 3.2–32 kW (package) | Z031665 | 1 | 14 958 PLN | Viessmann Sp. z o.o. |
+| 20* | *Alt:* Vitodens 111-F B1SG 3.2–25 kW (package) | Z031664 | 1 | 14 319 PLN | Viessmann Sp. z o.o. |
+| 30 | DHW circulation pump connection set | ZK05978 | 1 | 983 PLN | Viessmann Sp. z o.o. |
+| 40 | Hydraulic separator — 3 heating circuits | 7773837 | 1 | 2 277 PLN | Viessmann Sp. z o.o. |
+| 50 | Pump group GRA2 DN25 / Wilo PARA 25/6 (with mixing valve + 3-pt actuator 230V) | 7183336 | 2 | 2 144 PLN ea. | Viessmann Sp. z o.o. |
+| 60 | Pump group GDA2 DN25 / Wilo PARA 25/6 (direct, no mixing valve) | 7183292 | 1 | 1 577 PLN | Viessmann Sp. z o.o. |
+| 70 | Flue base set — shaft 80/125 | 7142128 | 1 | 567 PLN | Viessmann Sp. z o.o. |
+
+**Quote total (pos. 10 selected): 24 650 PLN net + 23% VAT = 30 319,50 PLN gross.**
+*If pos. 20 selected instead of 10: 24 011 PLN net + VAT = 29 533,53 PLN gross.*
+
+> Pos. 20 (25 kW) is marked as an alternative — not included in the quote total. Select one variant based on heat loss calc.
+
+| Item | Qty | Supplier |
 | :--- | :--- | :--- |
-| Viessmann Vitodens 222-F (kW TBD) | 1 | Viessmann dealer, Komfort.pl, Instalcompact.pl |
-| Viessmann OpenTherm Extension Module | 1 | Viessmann dealer (order with boiler) |
-| Olimex ESP32-POE-ISO | 1 | Botland.pl, Nettigo.pl, Olimex direct |
-| DIYLESS OpenTherm Master Shield | 1 | diyless.pl, Nettigo.pl |
+| Nodo OpenTherm Gateway UTP kit (Ethernet interface + enclosure) | 1 | [Nodo-shop](https://www.nodo-shop.nl/en/our-products/327-opentherm-gateway-builder-utp.html) |
+| PoE to USB Type C splitter (802.3af → 5 V USB) | 1 | Nodo-shop (optional), or generic (e.g. 802.3af to USB-C) |
 
 #### Thermostats & TRVs
 
@@ -949,7 +1043,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 | Risk | Mitigation |
 | :--- | :--- |
-| **Galvanic isolation** | Olimex ESP32-POE-ISO provides 3000V isolation. Do not substitute with a non-ISO ESP32 board — boiler electrical transients will damage the UniFi PoE switch port. |
+| **OTGW placement** | Nodo OTGW is powered via PoE→USB-C splitter and connected over Ethernet. Place OTGW and cables away from boiler ignition/mains to reduce interference. The OTGW does not provide galvanic isolation; if boiler electrical noise is a concern, use a serial connection to a host with isolated USB, or keep Ethernet run short and away from high-current boiler wiring. |
 | **Database write wear** | HA Recorder is configured to write to **MariaDB on Unraid** (not the Pi 5 NVMe). Configure in `configuration.yaml`: `recorder: db_url: mysql://...`. Do not leave default SQLite on Pi. |
 | **MDV/UFH conflict** | The Living Room MDV/UFH interlock automation (Section 11.2, Automation 5) is mandatory. Test this thoroughly before going live — a misconfigured interlock means the floor heats while the AC cools simultaneously. |
 | **Thread channel conflict** | Thread must run on Channel 25. Verify U7 Pro XG APs are not advertising 2.4GHz WiFi on channels that overlap (channels 1–6 are safe; 11 overlaps with Thread Ch.25 slightly — use Ch.1 or Ch.6 for 2.4GHz WiFi). |
@@ -962,19 +1056,25 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 ### 16. Open Items & Pre-Purchase Decisions
 
+> **Viessmann quote received:** Quote 9520283558 (12 Mar 2026) covers boiler package, hydraulic separator, pump groups, DHW circ pump set, and flue base kit. Valid 1 month. OpenTherm confirmed available; automation is owner's responsibility. See Sections 3.1 and 3.3 for full breakdown.
+
 | # | Item | Owner | Status |
 | :--- | :--- | :--- | :--- |
-| 1 | Heat loss calculation (PN-EN 12831) — determines boiler kW | HVAC engineer | **Blocking — must complete before boiler order** |
+| 1 | Heat loss calculation (PN-EN 12831) — determines boiler kW variant (25 kW vs 32 kW). Viessmann quote valid 1 month from 12 Mar 2026. | HVAC engineer | **Blocking — must complete before boiler order** |
 | 2 | Bathroom UFH loop independence — verify at manifold cabinet | Owner / plumber | **Blocking — determines W500 qty** |
-| 3 | Guest House boiler topology — shared circuit with main house or separate boiler? | Owner / HVAC engineer | **Blocking — affects manifold and pipe design** |
-| 4 | Confirm Salus wiring centre zone count — does it have 3 independent zone outputs? | Owner | Quick physical check |
+| 3 | ~~Guest House boiler topology~~ — **Resolved.** Guest house shares the main boiler. It has its own UFH loop fed from one of the 3-circuit separator's GRA2 mixed circuits, controlled by W500 #1. | Owner | **Closed** |
+| 4 | Confirm Salus wiring centre role — with the Viessmann 3-circuit separator + pump groups, the Salus centre may become redundant or serve a different function. Discuss with installer. | Owner / HVAC installer | To be decided during detailed design |
 | 5 | Office AirCon — confirm brand/model (Gree vs LG) | Owner | Determines HA integration to use |
 | 6 | W600 radiator count — full site survey of all rad heads | Owner | Determines W600 purchase qty |
 | 7 | MDV WiFi: WF-60A1 — verify CN40 connector on MTB indoor unit before purchase (see Section 7.2) | Owner | Before MDV integration work |
 | 8 | Midea AC LAN compatibility test — fit WF-60A1, confirm HA discovery on LAN | Owner / HA installer | Before going live |
 | 9 | Gree/LG integration LAN-local test — confirm unit responds without cloud | Owner | Close out to-do |
 | 10 | Heating curve tuning — set initial curve coefficients at commissioning | HVAC engineer / HA installer | At commissioning |
-| 11 | Salus wiring centre vs new wiring centre — validate reuse and compare with installer’s recommendation | Owner / HVAC installer | To be decided during detailed design; plan currently assumes reuse but is flexible |
+| 11 | Salus wiring centre vs new wiring centre — the Viessmann 3-circuit separator + pump groups may partially or fully replace the Salus centre’s function. Validate with installer. | Owner / HVAC installer | To be decided during detailed design |
+| 12 | Confirm circuit assignment on 3-circuit separator: which GRA2 = main house UFH, which GRA2 = guest house UFH, GDA2 = radiators. See Section 3.3. | Owner / HVAC engineer | Before installation |
+| 13 | Flue element verification — quote includes base kit (80/125 shaft) only; full flue run must be specified with flue installer before ordering. | Owner / flue installer | Before ordering |
+| 14 | DHW circulation pump — quote includes connection set (ZK05978) but confirm whether the pump itself is included or must be sourced separately. | Owner / Viessmann dealer | Before ordering |
+| 15 | Hydraulic connection orientation — top connections (default in quote) vs. side outlets. Decide based on engine room layout. | Owner / HVAC installer | Before ordering |
 
 ---
 
@@ -1001,16 +1101,13 @@ GARAGE                  [Fiber / Cable WAN]
 
 ─────────────────────────────────────────────────────────────────────
 
-ENGINE ROOM             [Viessmann Vitodens 222-F]
-(Heat Source)                │ (internal ribbon)
-                        [Viessmann OT Extension Module]
-                             │ (2-wire OpenTherm bus)
-                        [DIYLESS OT Master Shield]
+ENGINE ROOM             [Viessmann Vitodens 111-F]
+(Heat Source)                │ (2-wire OpenTherm bus)
+                        [Nodo OTGW UTP + Ethernet]
+                             ├── USB ← PoE-to-USB-C splitter ← Cat6 PoE
+                             └── Ethernet → Cat6 → (HA via IoT VLAN)
                              │
-                        [Olimex ESP32-POE-ISO]  ←── (Cat6 PoE)
-                             │ (ESPHome → HA via LAN)
-                             │
-                        [Salus Wiring Centre]
+                        [Salus Wiring Centre]  (unchanged; zone calls from W500/Shelly)
                         ┌────┴─────────────────────┐
                    Zone 1 (UFH Guest House)    Zone 2 (UFH Living Room)
                    Aqara W500 #1               Aqara W500 #2
@@ -1064,10 +1161,14 @@ Official product pages and documentation:
 
 | Product | Store / manufacturer |
 | :--- | :--- |
-| Viessmann Vitodens 222-F | [viessmann.co.uk](https://viessmann.co.uk/en/products/gas/vitodens-222-f.html) |
-| Viessmann OpenTherm Extension Module | Via Viessmann dealer (order with boiler) |
-| Olimex ESP32-POE-ISO | [olimex.com](https://www.olimex.com/Products/IoT/ESP32/ESP32-POE-ISO/open-source-hardware) |
-| DIYLESS OpenTherm Master Shield | [diyless.com](https://diyless.com/product/master-opentherm-shield) |
+| Viessmann Vitodens 111-F B1SG | [Viessmann PL](https://www.viessmann.pl/pl/produkty/gazowe-kotly-kondensacyjne/vitodens-111-f.html), [V-market](https://v-market.pl/kategoria/viessmann-kondensacyjne-kotly-gazowe/vitodens-111f/) |
+| Viessmann Quote 9520283558 (12 Mar 2026) | Viessmann Sp. z o.o., contact: Karol Wieniawski +48 782 756 346 |
+| Viessmann hydraulic separator 3-circuit (7773837) | Viessmann Sp. z o.o. (included in quote) |
+| Viessmann GRA2 pump group DN25 / Wilo PARA 25/6 (7183336) | Viessmann Sp. z o.o. (included in quote) |
+| Viessmann GDA2 pump group DN25 / Wilo PARA 25/6 (7183292) | Viessmann Sp. z o.o. (included in quote) |
+| Viessmann DHW circ pump connection set (ZK05978) | Viessmann Sp. z o.o. (included in quote) |
+| Nodo OpenTherm Gateway UTP (Ethernet + PoE/USB-C) | [Nodo-shop](https://www.nodo-shop.nl/en/our-products/327-opentherm-gateway-builder-utp.html) |
+| OTGW firmware & tools | [otgw.tclcode.com](http://otgw.tclcode.com/) |
 | Aqara Hub M3 | [aqara.com](https://us.aqara.com/products/aqara-smart-hub-m3) |
 | Aqara W500 UFH Thermostat | [aqara.com](https://www.aqara.com/en/product/floor-heating-thermostat-w500/) |
 | Aqara W600 Radiator TRV | [aqara.com](https://www.aqara.com/en/product/radiator-thermostat-w600/) |
