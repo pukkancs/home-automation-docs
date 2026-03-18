@@ -121,10 +121,9 @@ Home Assistant (highest authority)
 | Zone | Location | Thermostat | Wiring Centre Channel |
 | :--- | :--- | :--- | :--- |
 | Zone 1 | Guest House (Bedroom, Living Room, Kitchen, Bathroom) | Aqara W500 #1 | Channel 1 |
-| Zone 2 | Living Room | Aqara W500 #2 | Channel 2 |
-| Zone 3 | Bathroom (if independent loop confirmed) | Aqara W500 #3 | Channel 3 |
+| Zone 2 | Living Room + Bathroom (shared loop) | Aqara W500 #2 | Channel 2 |
 
-> **Pre-purchase action required:** Physically verify at the manifold cabinet whether the bathroom has an independent pipe loop before ordering the 3rd W500. If the bathroom shares the Living Room loop, Zone 2 covers both and no 3rd W500 is needed.
+> **Bathroom loop confirmed shared with Living Room:** No 3rd W500 thermostat or separate bathroom loop will be installed. The Living Room UFH zone (Zone 2) controls both spaces on the same manifold loop.
 
 ---
 
@@ -216,7 +215,7 @@ Viessmann 111-F B1SG
         └── Circuit 3 (GDA2 — direct) → Radiator Circuit
               No mixing — radiators receive full boiler flow temp (up to 55–60°C)
               Feeds: All W600 TRV-equipped radiators
-              Master enable: Shelly Plus 1 relay (HA demand logic)
+              Master enable: Shelly Pro 1 relay (HA demand logic) → LP8 Channel 3
 ```
 
 > **Key design point:** The 2x GRA2 pump groups with mixing valves solve the UFH temperature protection requirement. UFH loops will never receive water above the mixing valve setpoint (~35–45°C), even when the boiler runs at higher flow temperatures for the radiator circuit. This eliminates the need for a separate thermostatic blending valve on the UFH manifold.
@@ -257,11 +256,10 @@ Home Assistant controls the boiler by setting the **flow temperature setpoint** 
   - The exact curve is tuned during commissioning based on the property's heat loss characteristics
 - This alone reduces gas consumption significantly versus fixed flow temp
 
-**B. Load Compensation (TRV Demand Feedback)**
-- Aqara W600 TRVs report their **valve opening percentage** back to HA via Thread/Matter
-- HA aggregates demand across all W600s: if average opening is low (rooms nearly at setpoint), HA reduces the flow temp setpoint sent to the boiler
-- If W600s are wide open (rooms cold, high demand), HA raises the flow temp setpoint
-- This prevents the boiler from overheating rooms that are already warm
+**B. Load Compensation (TRV demand feedback) — future option**
+- **W600 valve opening %** is *not* confirmed for the Matter/Thread path (Aqara M3 → HA). The standard Matter Thermostat cluster (0x0201) does not expose valve position; Zigbee2MQTT exposes `position` but has a known bug (reports >100% when fully open, e.g. [Z2M #31148](https://github.com/koenkk/zigbee2mqtt/issues/31148)). ZHA/Matter exposure for W600 valve % is not documented.
+- Until valve % is reliably available in HA (integration update or Zigbee path with clamping), **load compensation is not used**. Flow temperature is set by **weather compensation only** (see Section 11.2, Automation 2). Radiator circuit enable uses **wall-sensor vs setpoint** and **W600 hvac_action** (see Section 6.3).
+- When valve position *is* exposed (e.g. via a future Matter/HA update or Zigbee with normalised values), HA can add: raise flow setpoint when average valve opening is high, lower it when low — improving condensing efficiency without changing the rest of the logic.
 
 **Combined effect:** The boiler modulates its burner output precisely to what is needed, running at low flame for long periods rather than cycling on/off at full power. Condensing efficiency is maximised, boiler wear is minimised.
 
@@ -333,43 +331,39 @@ Mode transitions:
 
 ### 5. UFH Manifold & Wiring Centre
 
-#### 5.1 Existing Salus Wiring Centre — To Be Evaluated
+#### 5.1 UFH Wiring Centre: LP8 (replaces Salus)
 
-The existing **Salus wiring centre** currently:
+The legacy **Salus wiring centre** is replaced with a simple wired UFH strip such as **LP8** (`listwa sterująca ogrzewaniem podłogowym, 8 obwodów` — Engo / TermPlus class).
 
-- Receives volt-free call-for-heat signals from zone thermostats.
-- Drives 230V manifold actuators (motorised valves on UFH pipe loops).
-- Signals the boiler to fire when any zone is calling.
+In the target design, the LP8 (or equivalent 8-zone wired strip):
 
-The plan is to **reuse** this wiring centre with Aqara W500 thermostats, which also provide volt-free contacts. However, this must be **validated with the installer**, and the pros and cons of replacing it with the installer’s recommended wiring solution must be evaluated before finalising:
+- Receives **volt-free call-for-heat** contacts from Aqara W500 thermostats (Zones: Guest House, Living Room, Bathroom if confirmed).
+- Drives **230 V manifold actuators** (motorised valves on UFH pipe loops).
+- Provides a **UFH pump output** for the UFH circulation pump(s).
+- Can expose a **boiler enable contact**, kept as a backup interlock (e.g. “any UFH call”); normal boiler modulation and primary enable remain via OpenTherm and HA logic.
 
-- **Reuse Salus:**
-  - Pro: minimal rewiring, lower cost, known working behaviour.
-  - Con: may limit future zone expansion or diagnostics compared to a modern wiring centre.
-- **Replace per installer recommendation:**
-  - Pro: supported, documented wiring, possibly better integration with new boiler/manifold layout.
-  - Con: higher cost and more invasive work.
-
-> **Decision:** **To be taken with the heating installer during design/commissioning.** Until then, this document assumes reuse of the Salus wiring centre, but this is explicitly subject to change.
+This document assumes an **8-zone wired UFH strip (LP8-class)** as the standard wiring centre. All “smart” behaviour (schedules, modes, load compensation, radiator enable) remains in **Home Assistant / Aqara**, not in the wiring centre itself.
 
 #### 5.2 Zone Channel Mapping
 
-| Wiring Centre Channel | Old Thermostat | New Thermostat | Zone |
+| LP8 Channel | Old Thermostat | New Thermostat / Control | Zone |
 | :--- | :--- | :--- | :--- |
-| Channel 1 | Salus wired stat | **Aqara W500 #1** | Guest House UFH |
-| Channel 2 | Salus wired stat | **Aqara W500 #2** | Living Room UFH |
-| Channel 3 | Salus wired stat (if present) | **Aqara W500 #3** (if loop confirmed) | Bathroom UFH |
+| Channel 1 | Legacy wired stat | **Aqara W500 #1** | Guest House UFH |
+| Channel 2 | Legacy wired stat | **Aqara W500 #2** | Living Room UFH |
+| Channel 3 | Wireless Salus (rad circuit) | **Shelly Pro 1** (relay output from HA) | Radiator circuit enable |
 
-#### 5.3 Radiator Circuit Channel — Modified
+> **Bathroom:** Bathroom UFH shares the Living Room loop; no separate W500 or LP8 channel. Only two UFH channels (1 and 2) are used.
 
-Previously the radiator zone was driven by a single wireless Salus thermostat covering all radiators. With W600 TRVs installed on every radiator, individual room thermostats are no longer needed. The radiator circuit channel on the wiring centre is rewired as follows:
+#### 5.3 Radiator Circuit Channel — LP8 Channel 3 (Shelly Pro 1)
 
-- The channel output is wired through a **Shelly Plus 1** (DIN rail, IoT VLAN WiFi)
-- HA controls this Shelly as a **"Radiator Circuit Enable"** relay
-- When any W600 reports demand (valve opening), HA closes the relay → wiring centre fires the radiator zone → boiler gets a call for heat on the rad circuit
-- When no W600 has demand (summer mode, or all rooms at setpoint), HA opens the relay → radiator circuit is fully inhibited
+Previously the radiator zone was driven by a single wireless Salus thermostat covering all radiators. With W600 TRVs installed on every radiator, individual room thermostats are no longer needed. **LP8 Channel 3** is assigned to the radiator circuit and is driven as follows:
 
-This gives a clean master shutoff for the entire radiator circuit without touching wiring centre internals.
+- **Shelly Pro 1** (DIN rail mounting, IoT VLAN WiFi) — relay output **feeds LP8 Channel 3** (call-for-heat input to the wiring centre for the radiator circuit).
+- HA controls the Shelly Pro 1 as the **"Radiator Circuit Enable"** relay.
+- When any radiator room has **demand** (wall sensor below setpoint and W600 effectively calling for heat — see Section 6.3), HA closes the relay → Shelly output energises LP8 Channel 3 → wiring centre fires the radiator zone → boiler gets a call for heat on the rad circuit.
+- When no radiator room has demand (summer mode, or all rooms at setpoint), HA opens the relay → Channel 3 is inactive → radiator circuit is fully inhibited.
+
+This gives a clean master shutoff for the entire radiator circuit; the Shelly Pro 1 is the only smart element on Channel 3.
 
 #### 5.4 Aqara W500 — Key Properties
 
@@ -387,10 +381,21 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 #### 6.1 Aqara W600 — Key Properties
 
 - Thread/Matter radiator TRV head
-- Reports **valve opening percentage** back to HA — this is the critical data point for load compensation
 - Replaces existing thermostatic TRV heads on each radiator
 - Pairs with Aqara M3 Hub (Matter/Thread border router)
-- Supports HA climate entity natively
+- Supports HA climate entity natively (setpoint, mode, optional **hvac_action** e.g. `heating` / `idle`)
+- **Valve opening %:** Not reliably exposed via Matter in HA today (see Section 6.1.1). When available in future (integration or Zigbee path), it can be used for load compensation and finer rad-demand logic.
+
+#### 6.1.1 W600 Valve Position — Verification (2026)
+
+| Path | Valve % in HA | Notes |
+| :--- | :--- | :--- |
+| **Matter/Thread (M3 → HA)** | **Not confirmed** | Matter Thermostat cluster (0x0201) does not define valve position. No authoritative report that W600 over Matter exposes it. |
+| **Zigbee (Zigbee2MQTT)** | Exposed as `position` (0–100%) | [Z2M WT-A03E](https://www.zigbee2mqtt.io/devices/WT-A03E.html) documents `position`; [Z2M #31148](https://github.com/koenkk/zigbee2mqtt/issues/31148) — open bug: value can report >100% (e.g. 210%) when fully open (converter/firmware). Use only with clamping if relying on it. |
+| **ZHA** | Not verified | Device-specific; no confirmed W600 valve attribute in HA for ZHA. |
+| **Aqara forum** | Unresolved | [Aqara forum #156616](https://forum.aqara.com/t/questions-about-aqara-w600-valve-modulation-and-exposed-attributes-w600-zigbee-matter/156616) — questions on W600 valve modulation and Matter-exposed attributes; no definitive answer for Matter. |
+
+**Design decision:** Heating logic in this document **does not depend on valve %**. Radiator demand and circuit enable use wall-sensor temperature vs setpoint and (where available) W600 `hvac_action`. Load compensation is **weather-curve only** until valve % is confirmed and stable in the chosen integration.
 
 #### 6.2 Radiator Inventory
 
@@ -412,25 +417,49 @@ This gives a clean master shutoff for the entire radiator circuit without touchi
 
 **Total W600 count: 8 minimum.** Confirm during site survey — if any room has additional radiators not listed, add one W600 per head.
 
-> **Important:** W600 built-in sensors read temperature near the radiator, which is not representative of room temperature. HA automations must use the dedicated wall sensor (W100 or T1) as the primary temperature source for each room. The W600 sensor is useful only for valve position feedback and load compensation logic.
+> **Important:** W600 built-in sensors read temperature near the radiator, which is not representative of room temperature. HA automations must use the dedicated wall sensor (W100 or T1) as the primary temperature source for each room. If valve position is later exposed, the W600 sensor/valve data can be used for load compensation (future option).
 
-#### 6.3 W600 Demand Aggregation Logic (HA)
+#### 6.3 Radiator Demand Logic (HA) — sensor-based (no valve %)
+
+Radiator circuit enable and flow temperature do **not** rely on W600 valve opening % (see Section 6.1.1). Demand is derived from **wall sensor temperature vs room setpoint** and, where available, **W600 hvac_action**.
+
+**Per-room demand (radiator rooms):**
+
+- **Primary:** Wall sensor (T1 or W100) for that room. Room has **demand** when:
+  - `room_current_temp` (wall sensor) **<** `room_target_temp` (from schedule or W600 setpoint) **−** dead_band (e.g. 0.3°C), and
+  - Season mode = Heating and the room is in the active radiator set.
+- **Optional reinforcement:** If the W600 climate entity exposes `hvac_action` (e.g. `heating`), treat `hvac_action == heating` as demand for that room; if not exposed, rely only on wall sensor vs setpoint.
+
+**Radiator circuit enable (Shelly Pro 1 → LP8 Channel 3):**
+
+```
+Every 1–2 min (or on wall-sensor / setpoint change):
+  rad_rooms_with_demand = count of radiator rooms where
+    (wall_sensor_temp < target_temp - 0.3) AND season_mode = Heating
+    [optional: AND W600 hvac_action == 'heating' for that room]
+
+  IF rad_rooms_with_demand > 0:
+    → Shelly Pro 1 (radiator circuit enable) = ON → LP8 Channel 3 active
+    (apply min-on duration / debounce as per Section 11.2 if implemented)
+  ELSE:
+    → Shelly Pro 1 = OFF → LP8 Channel 3 inactive
+    (apply min-off or hysteresis to avoid rapid cycling)
+```
+
+**Flow temperature (OpenTherm setpoint):**
+
+- Set by **weather compensation only** (Automation 2): `flow_temp = heating_curve(outdoor_temp)`, clamped 35–60°C.
+- **Load compensation (valve %)** is **not** used until W600 valve position is confirmed available in HA; then the logic in the following note can be enabled.
+
+**Future option (when valve % is available):**
 
 ```
 Every 5 minutes:
-  rad_demand_pct = average(W600_valve_opening across all active W600s)
-
-  IF rad_demand_pct > 60%:
-    → Raise boiler flow temp setpoint by 2°C (up to max curve value)
-  ELIF rad_demand_pct < 20%:
-    → Lower boiler flow temp setpoint by 2°C (down to minimum ~35°C)
-  ELSE:
-    → Hold current setpoint
-
-  IF rad_demand_pct > 0%:
-    → Shelly Plus 1 (radiator circuit enable) = ON
-  ELSE:
-    → Shelly Plus 1 = OFF
+  rad_demand_pct = average(W600 valve_position across active W600s)
+  IF rad_demand_pct > 60%:  raise flow setpoint by 2°C (up to max)
+  ELIF rad_demand_pct < 20%:  lower flow setpoint by 2°C (down to min)
+  ELSE:  hold
+  (Circuit enable can optionally also use valve_position > 5% as demand.)
 ```
 
 ---
@@ -671,7 +700,7 @@ input_select:
     # Frost Protection = all zones drop to minimum safe temp (7°C)
 
 input_boolean:
-  rad_circuit_enable: # Mirrors Shelly Plus 1 state (radiator circuit master relay)
+  rad_circuit_enable: # Mirrors Shelly Pro 1 state (radiator circuit master relay, feeds LP8 Ch3)
 
 input_number:
   boiler_flow_setpoint:     # Current OT setpoint written to boiler (35–60°C)
@@ -735,22 +764,27 @@ Action:
   Write flow_temp to OT setpoint via OpenTherm Gateway integration
 ```
 
-**Automation 3: Load Compensation (TRV Feedback)**
+**Automation 3: Load Compensation (TRV valve %) — future**
 ```
-Trigger: any W600 valve_position changes
-Action:
-  avg_opening = mean(all W600 valve positions)
-  Adjust flow_temp setpoint ±2°C per cycle (see Section 6.3)
+When W600 valve position is exposed in HA (see Section 6.1.1):
+  Trigger: any W600 valve_position changes
+  Action: avg_opening = mean(all W600 valve positions)
+          Adjust flow_temp setpoint ±2°C per cycle (see Section 6.3 future option)
+Current: Not used; flow temp is weather compensation only (Automation 2).
 ```
 
 **Automation 4: Radiator Circuit Enable**
 ```
-Trigger: any W600 valve_position changes
+Trigger: time pattern every 1–2 min, OR any radiator-room wall sensor (T1/W100) change,
+         OR W600 setpoint / hvac_action change (if available)
 Action:
-  IF any W600 valve_position > 5%:
-    → Shelly Plus 1 (rad circuit) = ON
+  rad_demand = (count of radiator rooms where wall_sensor_temp < target_temp - 0.3°C
+                AND season_mode = Heating)
+  IF rad_demand > 0:
+    → Shelly Pro 1 (rad circuit, LP8 Ch3) = ON
+    (optionally enforce min-on duration and demand debounce)
   ELSE:
-    → Shelly Plus 1 (rad circuit) = OFF
+    → Shelly Pro 1 (rad circuit, LP8 Ch3) = OFF
 ```
 
 **Automation 5: MDV/UFH Living Room Interlock**
@@ -1005,7 +1039,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 | Item | Qty | Supplier (Poland) |
 | :--- | :--- | :--- |
-| Aqara W500 UFH Thermostat | 2 (or 3 if bathroom loop confirmed independent) | x-kom.pl, Allegro, Media Expert |
+| Aqara W500 UFH Thermostat | 2 | x-kom.pl, Allegro, Media Expert |
 | Aqara W600 Radiator TRV | 8 minimum (survey required — 1 per rad head) | x-kom.pl, Allegro |
 | Aqara W100 Display Sensor | 2 (Master Bedroom, Playroom) | x-kom.pl, Allegro |
 
@@ -1020,7 +1054,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 
 | Item | Qty | Supplier (Poland) |
 | :--- | :--- | :--- |
-| Shelly Plus 1 (DIN rail) | 1 (rad circuit enable) | Botland.pl, Nettigo.pl |
+| Shelly Pro 1 (DIN rail mounting) | 1 (rad circuit enable, feeds LP8 Channel 3) | Botland.pl, Nettigo.pl |
 | Shelly Wall Display XL | 3 (couch, upstairs, guest room 2) | Botland.pl, Nettigo.pl |
 
 #### AirCon Integration
@@ -1050,7 +1084,7 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 | **Installer ecosystem creep** | Explicitly tell the Viessmann installer not to fit VitoConnect or any Viessmann cloud module. Some installers fit these by default. It will complicate the OpenTherm setup. |
 | **W600 battery life** | W600 TRVs are battery-powered. Set up a HA automation to alert when any W600 battery drops below 20%. A dead TRV means a stuck valve. |
 | **Boiler sizing** | Do not proceed to purchase before heat loss calc. An oversized boiler will short-cycle. An undersized boiler won't meet demand on design days. |
-| **Bathroom manifold loop** | If the bathroom shares the Living Room UFH loop and a W500 is incorrectly installed thinking it's independent, you'll have two thermostats fighting one loop. Verify physically at the manifold cabinet before ordering. |
+| **Bathroom manifold loop** | Confirmed: bathroom shares the Living Room UFH loop. Only two W500 thermostats are installed — one for the Guest House UFH zone and one for the shared Living Room + Bathroom UFH loop. |
 
 ---
 
@@ -1063,18 +1097,19 @@ A layered control hierarchy prevents app fatigue and keeps the system guest-acce
 | 1 | Heat loss calculation (PN-EN 12831) — determines boiler kW variant (25 kW vs 32 kW). Viessmann quote valid 1 month from 12 Mar 2026. | HVAC engineer | **Blocking — must complete before boiler order** |
 | 2 | Bathroom UFH loop independence — verify at manifold cabinet | Owner / plumber | **Blocking — determines W500 qty** |
 | 3 | ~~Guest House boiler topology~~ — **Resolved.** Guest house shares the main boiler. It has its own UFH loop fed from one of the 3-circuit separator's GRA2 mixed circuits, controlled by W500 #1. | Owner | **Closed** |
-| 4 | Confirm Salus wiring centre role — with the Viessmann 3-circuit separator + pump groups, the Salus centre may become redundant or serve a different function. Discuss with installer. | Owner / HVAC installer | To be decided during detailed design |
+| 4 | Confirm LP8 wiring centre wiring — map W500 contacts, actuator outputs, UFH pump and (optional) boiler enable correctly. | Owner / HVAC installer | To be decided during detailed design |
 | 5 | Office AirCon — confirm brand/model (Gree vs LG) | Owner | Determines HA integration to use |
 | 6 | W600 radiator count — full site survey of all rad heads | Owner | Determines W600 purchase qty |
 | 7 | MDV WiFi: WF-60A1 — verify CN40 connector on MTB indoor unit before purchase (see Section 7.2) | Owner | Before MDV integration work |
 | 8 | Midea AC LAN compatibility test — fit WF-60A1, confirm HA discovery on LAN | Owner / HA installer | Before going live |
 | 9 | Gree/LG integration LAN-local test — confirm unit responds without cloud | Owner | Close out to-do |
 | 10 | Heating curve tuning — set initial curve coefficients at commissioning | HVAC engineer / HA installer | At commissioning |
-| 11 | Salus wiring centre vs new wiring centre — the Viessmann 3-circuit separator + pump groups may partially or fully replace the Salus centre’s function. Validate with installer. | Owner / HVAC installer | To be decided during detailed design |
+| 11 | Old Salus wiring centre removal — confirm safe decommissioning or reuse of enclosure/terminal blocks when LP8 is installed. | Owner / HVAC installer | To be decided during detailed design |
 | 12 | Confirm circuit assignment on 3-circuit separator: which GRA2 = main house UFH, which GRA2 = guest house UFH, GDA2 = radiators. See Section 3.3. | Owner / HVAC engineer | Before installation |
 | 13 | Flue element verification — quote includes base kit (80/125 shaft) only; full flue run must be specified with flue installer before ordering. | Owner / flue installer | Before ordering |
 | 14 | DHW circulation pump — quote includes connection set (ZK05978) but confirm whether the pump itself is included or must be sourced separately. | Owner / Viessmann dealer | Before ordering |
 | 15 | Hydraulic connection orientation — top connections (default in quote) vs. side outlets. Decide based on engine room layout. | Owner / HVAC installer | Before ordering |
+| 16 | W600 valve position in HA — if Matter or ZHA exposes valve % (see Section 6.1.1), enable load compensation (Automation 3) and optional valve-based rad enable. | Owner / HA | Future — when integration confirms valve attribute |
 
 ---
 
@@ -1114,7 +1149,7 @@ ENGINE ROOM             [Viessmann Vitodens 111-F]
                         │                          │
                    [Manifold Actuators]       [Manifold Actuators]
                         │                          │
-                   Zone 3 (Rad Circuit Enable) ── Shelly Plus 1 ← HA
+                   Zone 3 (Rad Circuit Enable) ── Shelly Pro 1 ← HA (feeds LP8 Channel 3)
 
 ─────────────────────────────────────────────────────────────────────
 
@@ -1153,6 +1188,95 @@ DISPLAYS                [UniFi Connect 21"] — Living Room (Command Tower)
                         [HA Companion App]  — Mobile (remote access)
 ```
 
+#### 17.1 Heating system diagram (heat flow)
+
+End-to-end path from boiler to zones. Same topology applies whether the heat source is Viessmann 111-F or another OpenTherm-capable boiler (e.g. Vaillant EcoCompact 4 + VR33).
+
+```
+                    ┌─────────────────────────────────────────────────────────────────┐
+                    │                     HEAT SOURCE (Engine Room)                     │
+                    │  Boiler (e.g. Viessmann 111-F / Vaillant EcoCompact 4 + VR33)    │
+                    │  OpenTherm 2-wire bus → Nodo OTGW → Ethernet → Home Assistant   │
+                    └───────────────────────────────────┬─────────────────────────────┘
+                                                        │
+                    ┌───────────────────────────────────▼─────────────────────────────┐
+                    │           Hydraulic separator (3 circuits, low-loss header)      │
+                    └───┬─────────────────────────┬─────────────────────────┬─────────┘
+                        │                         │                         │
+         Circuit 1      │         Circuit 2       │         Circuit 3       │
+         (GRA2 mixed)   │         (GRA2 mixed)    │         (GDA2 direct)   │
+         Mixing valve   │         Mixing valve    │         No mixing       │
+         ~35–45°C       │         ~35–45°C       │         Full flow temp  │
+                        │                         │         (55–60°C)      │
+                        ▼                         ▼                         ▼
+              ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+              │ UFH Main House  │     │ UFH Guest House  │     │ Radiator circuit│
+              │ W500 #2         │     │ W500 #1          │     │ Shelly Pro 1    │
+              │ Living Room +   │     │ (Bedroom, Living,│     │ (master enable) │
+              │ Bathroom loop   │     │ Kitchen, Bathroom)│     │ ← HA demand    │
+              └────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+                       │                       │                        │
+                       ▼                       ▼                        ▼
+              LP8 Channel 2            LP8 Channel 1            LP8 Channel 3 (Shelly Pro 1)
+              (call-for-heat)          (call-for-heat)          (via Shelly)
+                       │                       │                        │
+                       └───────────────────────┴────────────────────────┘
+                                               │
+                                    ┌──────────▼──────────┐
+                                    │  LP8 wiring centre  │
+                                    │  (replaces Salus)   │
+                                    │  UFH pump, boiler   │
+                                    │  enable (optional)  │
+                                    └────────────────────┘
+```
+
+**Control authority:** Home Assistant sets boiler flow temperature via OpenTherm (weather compensation). W500 thermostats and HA (Shelly) provide volt-free call-for-heat to the LP8; the LP8 drives UFH actuators and (via Shelly) the radiator circuit. Boiler firing follows zone demand; modulation is continuous via OpenTherm.
+
+#### 17.2 Valve control diagram
+
+Who drives which valves: UFH manifold actuators, radiator circuit zone valve, and room-level W600 TRVs.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              VALVE CONTROL (who opens what)                              │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+  UFH ZONES (manifold actuators — 230 V, driven by LP8)
+  ─────────────────────────────────────────────────────
+  Call-for-heat source          LP8 channel         Valve / actuator
+  ─────────────────────────     ─────────────       ─────────────────────────────────────
+  Aqara W500 #1 (Guest House)   Channel 1    ───►   Manifold actuators — Guest House UFH
+  Aqara W500 #2 (Living Room)   Channel 2    ───►   Manifold actuators — Living Room + Bathroom UFH
+
+  W500s provide volt-free contact when room temp < setpoint; LP8 energises the corresponding
+  channel → 230 V to that zone’s manifold actuators → motorised valves open on the UFH loops.
+
+
+  RADIATOR CIRCUIT (single zone valve — master enable)
+  ───────────────────────────────────────────────────
+  Demand logic (HA)              Relay                Actuator / valve
+  ─────────────────────────     ─────────────       ─────────────────────────────────────
+  Any radiator room has         Shelly Pro 1 (feeds LP8 Ch3) ───► Honeywell VC8010-12 (24 V) or equivalent
+  demand (wall sensor           (rad circuit         Zone valve (2-port or 3-port) on rad circuit
+  < setpoint − deadband)        enable)              Opens when Shelly ON → flow to all rads
+
+  HA turns Shelly ON when at least one radiator room has demand (Section 6.3); wiring centre
+  or pump group sees the closed contact and allows flow on the GDA2 (direct) circuit. The
+  zone valve actuator is energised by the same circuit (rad channel from LP8 / pump group).
+
+
+  ROOM-LEVEL RADIATOR CONTROL (per-radiator TRVs)
+  ──────────────────────────────────────────────
+  Controller                    Device               Effect
+  ─────────────────────────     ─────────────       ─────────────────────────────────────
+  HA (setpoint from schedule)    Aqara W600 TRV       Each radiator: valve opening % by room
+  + wall sensor (T1/W100)       (8×: Bath×2, Alex,   setpoint. W600 modulates flow to that rad.
+  (primary temp for demand)     Vicky, Playroom,     HA does not use valve % for demand yet
+                                Master×2, Office)    (Section 6.1.1); demand = wall temp vs setpoint.
+```
+
+**Summary:** UFH valves = LP8 from W500 call-for-heat. Radiator circuit = one zone valve driven when HA (via Shelly) enables the rad circuit. Individual radiator flow = W600 TRVs on each rad; HA enables the whole rad circuit when any rad room has demand.
+
 ---
 
 ### 18. Product References
@@ -1175,7 +1299,7 @@ Official product pages and documentation:
 | Aqara W100 Display Sensor | [aqara.com](https://www.aqara.com/eu/product/climate-sensor-w100/) |
 | Aqara Temperature Sensor T1 | [aqara.com](https://www.aqara.com/en/product/temperature-and-humidity-sensor-t1) |
 | Aqara M200 Hub | [aqara.com](https://www.aqara.com/us/product/hub-m200/) |
-| Shelly Plus 1 | [shelly.com](https://www.shelly.com/en-gb/products/product-overview/shelly-plus-1) |
+| Shelly Pro 1 (DIN rail) | [shelly.com](https://www.shelly.com/en-gb/products/shelly-pro-1) |
 | Shelly Wall Display XL | [shelly.com](https://www.shelly.com/products/shelly-wall-display-xl-black) |
 | Midea WF-60A1 WiFi module | [Midea Ukraine](https://www.midea.com.ua/en/products/light-commercial-ac-semi-industrial-conditioners/remote-control-panels/wi-fi-module-wf-60a1) |
 | Midea AC LAN (HA integration) | [HACS / GitHub](https://github.com/georgezhao2010/midea_ac_lan) |
